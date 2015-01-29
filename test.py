@@ -24,6 +24,21 @@ class ParableCoreTest(unittest.TestCase):
         exp = parable.parse_str(s)
         return parable.eval(exp, {})
 
+    def test_shorthand_quote(self):
+        exp = "'x"
+        result = self.eval_str(exp)
+        self.assertEqual(result, Symbol('x'))
+
+        exp = "(car '(x y))"
+        result = self.eval_str(exp)
+        self.assertEqual(result, Symbol('x'))
+
+        # quote character as a separator (no space before the second
+        # quote).
+        exp = "('x'y)"
+        result = parable.read_str(exp)
+        self.assertEqual(result, [[Symbol('quote'), Symbol('x')], [Symbol('quote'), Symbol('y')]])
+
     def test_integer(self):
         exp = '1080'
         result = self.eval_str(exp)

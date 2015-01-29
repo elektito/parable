@@ -129,7 +129,10 @@ def eval_sexp(sexp, env):
 def read_item(f):
     item = ''
     b = f.read(1)
-    while b and b not in '() \n':
+    if b == "'":
+        return [Symbol('quote'), read(f)]
+
+    while b and b not in '() \'\n':
         item += b
         b = f.read(1)
 
@@ -187,6 +190,9 @@ def read(f):
         return read_list(f)
     else:
         return read_item(f)
+
+def read_str(s):
+    return read(StringIO(s))
 
 def parse_str(s):
     return read(StringIO(s))
