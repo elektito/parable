@@ -70,7 +70,7 @@ def eval_sexp(sexp, env):
 
     car = sexp[0]
 
-    if car == 'fn':
+    if car in ('fn', 'mac'):
         assert len(sexp) == 3
         return sexp
 
@@ -85,24 +85,32 @@ def eval_sexp(sexp, env):
     if type(car) == str and car in map:
         return map[car](sexp, env)
 
-    # it must be a function call then.
+    # it must be a function or macro call then.
 
-    func = eval(sexp[0], env)
-    assert type(func) == list
-    assert func[0] == 'fn'
-    assert type(func[1]) == list
-    assert len(func) == 3
+    car = eval(sexp[0], env)
+    assert type(car) == list
+    assert type(car[1]) == list
+    assert len(car) == 3
 
-    params = func[1]
-    body = func[2]
+    params = car[1]
+    body = car[2]
     args = sexp[1:]
-    args = [eval(i, env) for i in args]
 
     if len(args) != len(params):
-        print 'Function accepts {} argument(s) but passed {}.'.format(len(params), len(args))
+        print 'Expected {} argument(s) but got {}.'.format(len(params), len(args))
         exit(2)
 
-    return eval(body, dict(env, **dict(zip(params, args))))
+    if car[0] == 'fn':
+        # evaluate arguments.
+        args = [eval(i, env) for i in args]
+
+        return eval(body, dict(env, **dict(zip(params, args))))
+    elif car[0] == 'mac':
+        expanded = eval(body, dict(env, **dict(zip(params, args))))
+        return eval(expanded, env)
+    else:
+        print 'Expected a macro or a function, got:', car
+        exit(2)
 
 def read_item(f):
     item = ''

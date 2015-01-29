@@ -63,5 +63,10 @@ class ParableCoreTest(unittest.TestCase):
         result = self.eval_str(exp)
         self.assertEqual(result, 'b')
 
+    def test_macro_call(self):
+        exp = '((mac (a b c) b) (a b) (if (quote t) (quote a) (quote b)) (p q))'
+        result = self.eval_str(exp)
+        self.assertEqual(result, 'a')
+
 if __name__ == '__main__':
     unittest.main()
