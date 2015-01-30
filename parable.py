@@ -10,6 +10,9 @@ class Symbol(object):
     def __hash__(self):
         return hash(self.name)
 
+    def __repr__(self):
+        return '<Symbol "{}">'.format(self.name)
+
 def destructure(params, args):
     if type(params) == list and type(args) != list:
         print 'Parameter list and the provided arguments do not match.'
