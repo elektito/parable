@@ -32,27 +32,27 @@ def eval_atom(sexp, env):
     else:
         return 't'
 
-def eval_car(sexp, env):
-    assert sexp[0].name == 'car'
+def eval_first(sexp, env):
+    assert sexp[0].name == 'first'
     assert len(sexp) == 2
     ret = eval(sexp[1], env)
     assert type(ret) == list
     return ret[0]
 
-def eval_cdr(sexp, env):
-    assert sexp[0].name == 'cdr'
+def eval_rest(sexp, env):
+    assert sexp[0].name == 'rest'
     assert len(sexp) == 2
     ret = eval(sexp[1], env)
     assert type(ret) == list
     return ret[1:]
 
-def eval_cons(sexp, env):
-    assert sexp[0].name == 'cons'
+def eval_prep(sexp, env):
+    assert sexp[0].name == 'prep'
     assert len(sexp) == 3
-    car = eval(sexp[1], env)
-    cdr = eval(sexp[2], env)
-    assert type(cdr) == list
-    return [car] + cdr
+    first = eval(sexp[1], env)
+    rest = eval(sexp[2], env)
+    assert type(rest) == list
+    return [first] + rest
 
 def eval_eq(sexp, env):
     assert sexp[0].name == 'eq'
@@ -82,48 +82,48 @@ def eval_sexp(sexp, env):
     if sexp == []:
         return []
 
-    car = sexp[0]
+    first = sexp[0]
 
-    if car in (Symbol('fn'), Symbol('mac')):
+    if first in (Symbol('fn'), Symbol('mac')):
         assert len(sexp) == 3
         return sexp
 
     map = {Symbol('if'): eval_if,
            Symbol('quote'): eval_quote,
-           Symbol('cons'): eval_cons,
+           Symbol('prep'): eval_prep,
            Symbol('atom'): eval_atom,
-           Symbol('car'): eval_car,
-           Symbol('cdr'): eval_cdr,
+           Symbol('first'): eval_first,
+           Symbol('rest'): eval_rest,
            Symbol('eq'): eval_eq}
 
-    if type(car) == Symbol and car in map:
-        return map[car](sexp, env)
+    if type(first) == Symbol and first in map:
+        return map[first](sexp, env)
 
     # it must be a function or macro call then.
 
-    car = eval(sexp[0], env)
-    assert type(car) == list
-    assert type(car[1]) == list
-    assert len(car) == 3
+    first = eval(sexp[0], env)
+    assert type(first) == list
+    assert type(first[1]) == list
+    assert len(first) == 3
 
-    params = car[1]
-    body = car[2]
+    params = first[1]
+    body = first[2]
     args = sexp[1:]
 
     if len(args) != len(params):
         print 'Expected {} argument(s) but got {}.'.format(len(params), len(args))
         exit(2)
 
-    if car[0] == Symbol('fn'):
+    if first[0] == Symbol('fn'):
         # evaluate arguments.
         args = [eval(i, env) for i in args]
 
         return eval(body, dict(env, **dict(zip(params, args))))
-    elif car[0] == Symbol('mac'):
+    elif first[0] == Symbol('mac'):
         expanded = eval(body, dict(env, **dict(zip(params, args))))
         return eval(expanded, env)
     else:
-        print 'Expected a macro or a function, got:', car
+        print 'Expected a macro or a function, got:', first
         exit(2)
 
 def read_item(f):

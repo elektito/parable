@@ -29,7 +29,7 @@ class ParableCoreTest(unittest.TestCase):
         result = self.eval_str(exp)
         self.assertEqual(result, Symbol('x'))
 
-        exp = "(car '(x y))"
+        exp = "(first '(x y))"
         result = self.eval_str(exp)
         self.assertEqual(result, Symbol('x'))
 
@@ -72,18 +72,18 @@ class ParableCoreTest(unittest.TestCase):
         result = self.eval_str(exp)
         self.assertEqual(result, [])
 
-    def test_car(self):
-        exp = '(car (quote (x y z)))'
+    def test_first(self):
+        exp = '(first (quote (x y z)))'
         result = self.eval_str(exp)
         self.assertEqual(result, Symbol('x'))
 
-    def test_cdr(self):
-        exp = '(cdr (quote (x y z)))'
+    def test_rest(self):
+        exp = '(rest (quote (x y z)))'
         result = self.eval_str(exp)
         self.assertEqual(result, [Symbol('y'), Symbol('z')])
 
-    def test_cons(self):
-        exp = '(cons (quote x) (quote (y z)))'
+    def test_prep(self):
+        exp = '(prep (quote x) (quote (y z)))'
         result = self.eval_str(exp)
         self.assertEqual(result, [Symbol(i) for i in ['x', 'y', 'z']])
 
