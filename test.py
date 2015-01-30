@@ -110,5 +110,10 @@ class ParableCoreTest(unittest.TestCase):
         result = self.eval_str(exp)
         self.assertEqual(result, Symbol('a'))
 
+    def test_destructuring_macro_call(self):
+        exp = "((mac (a (b (c)) d) (prep a (prep b (prep c (prep d '()))))) if ('t ('a)) 'b)"
+        result = self.eval_str(exp)
+        self.assertEqual(result, Symbol('a'))
+
 if __name__ == '__main__':
     unittest.main()

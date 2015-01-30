@@ -10,6 +10,29 @@ class Symbol(object):
     def __hash__(self):
         return hash(self.name)
 
+def destructure(params, args):
+    if type(params) == list and type(args) != list:
+        print 'Parameter list and the provided arguments do not match.'
+        print '    Expected a list in the arguments, got:', args
+        exit(2)
+
+    if len(params) != len(args):
+        print 'Parameter list and the provided arguments do not match.'
+        print '    Expected {} argument(s) but got {}.'.format(len(params), len(args))
+        exit(2)
+
+    env = {}
+    for p, a in zip(params, args):
+        if type(p) == Symbol:
+            env[p] = a
+        elif type(p) == list:
+            env.update(destructure(p, a))
+        else:
+            print 'Only symbols and lists allowed in parameter list; got a', type(p)
+            exit(2)
+
+    return env
+
 def eval_if(sexp, env):
     assert sexp[0].name == 'if'
     assert len(sexp) == 4
@@ -120,7 +143,13 @@ def eval_sexp(sexp, env):
 
         return eval(body, dict(env, **dict(zip(params, args))))
     elif first[0] == Symbol('mac'):
-        expanded = eval(body, dict(env, **dict(zip(params, args))))
+        # macro arguments can be destructuring.
+        extra_env = destructure(params, args)
+
+        # now expand the macro.
+        expanded = eval(body, dict(env, **extra_env))
+
+        # evaluate the result of expansion.
         return eval(expanded, env)
     else:
         print 'Expected a macro or a function, got:', first
