@@ -50,11 +50,11 @@ class ParableCoreTest(unittest.TestCase):
         self.assertEqual(result, 'foobar')
 
     def test_if(self):
-        exp = '(if (quote t) (quote a) (quote b))'
+        exp = "(if 't 'a 'b)"
         result = self.eval_str(exp)
         self.assertEqual(result, Symbol('a'))
 
-        exp = '(if (quote ()) (quote a) (quote b))'
+        exp = "(if '() 'a 'b)"
         result = self.eval_str(exp)
         self.assertEqual(result, Symbol('b'))
 
@@ -64,49 +64,49 @@ class ParableCoreTest(unittest.TestCase):
         self.assertEqual(result, Symbol('x'))
 
     def test_atom(self):
-        exp = '(atom (quote x))'
+        exp = "(atom 'x)"
         result = self.eval_str(exp)
         self.assertEqual(result, Symbol('t'))
 
-        exp = '(atom (quote (x y)))'
+        exp = "(atom '(x y))"
         result = self.eval_str(exp)
         self.assertEqual(result, [])
 
     def test_first(self):
-        exp = '(first (quote (x y z)))'
+        exp = "(first '(x y z))"
         result = self.eval_str(exp)
         self.assertEqual(result, Symbol('x'))
 
     def test_rest(self):
-        exp = '(rest (quote (x y z)))'
+        exp = "(rest '(x y z))"
         result = self.eval_str(exp)
         self.assertEqual(result, [Symbol('y'), Symbol('z')])
 
     def test_prep(self):
-        exp = '(prep (quote x) (quote (y z)))'
+        exp = "(prep 'x '(y z))"
         result = self.eval_str(exp)
         self.assertEqual(result, [Symbol(i) for i in ['x', 'y', 'z']])
 
     def test_eq(self):
-        exp = '(eq (quote x) (quote x))'
+        exp = "(eq 'x 'x)"
         result = self.eval_str(exp)
         self.assertEqual(result, Symbol('t'))
 
-        exp = '(eq (quote x) (quote y))'
+        exp = "(eq 'x 'y)"
         result = self.eval_str(exp)
         self.assertEqual(result, [])
 
-        exp = '(eq (quote (a b)) (quote (a b)))'
+        exp = "(eq '(a b) '(a b))"
         result = self.eval_str(exp)
         self.assertEqual(result, [])
 
     def test_function_call(self):
-        exp = '((fn (a b c) b) (quote a) (quote b) (quote c))'
+        exp = "((fn (a b c) b) 'a 'b 'c)"
         result = self.eval_str(exp)
         self.assertEqual(result, Symbol('b'))
 
     def test_macro_call(self):
-        exp = '((mac (a b c) b) (a b) (if (quote t) (quote a) (quote b)) (p q))'
+        exp = "((mac (a b c) b) (a b) (if 't 'a 'b) (p q))"
         result = self.eval_str(exp)
         self.assertEqual(result, Symbol('a'))
 
