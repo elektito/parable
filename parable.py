@@ -138,6 +138,10 @@ def eval_sexp(sexp, env):
         exit(2)
 
     if first[0] == Symbol('fn'):
+        if any(type(i) != Symbol for i in params):
+            print 'Function parameter list should only contain symbols.'
+            exit(2)
+
         # evaluate arguments.
         args = [eval(i, env) for i in args]
 
