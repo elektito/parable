@@ -66,7 +66,7 @@ class ParableCoreTest(unittest.TestCase):
     def test_atom(self):
         exp = '(atom (quote x))'
         result = self.eval_str(exp)
-        self.assertNotEqual(result, [])
+        self.assertEqual(result, Symbol('t'))
 
         exp = '(atom (quote (x y)))'
         result = self.eval_str(exp)
@@ -90,7 +90,7 @@ class ParableCoreTest(unittest.TestCase):
     def test_eq(self):
         exp = '(eq (quote x) (quote x))'
         result = self.eval_str(exp)
-        self.assertNotEqual(result, [])
+        self.assertEqual(result, Symbol('t'))
 
         exp = '(eq (quote x) (quote y))'
         result = self.eval_str(exp)

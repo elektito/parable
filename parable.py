@@ -30,7 +30,7 @@ def eval_atom(sexp, env):
     if type(val) == list:
         return []
     else:
-        return 't'
+        return Symbol('t')
 
 def eval_first(sexp, env):
     assert sexp[0].name == 'first'
@@ -60,7 +60,7 @@ def eval_eq(sexp, env):
     first = eval(sexp[1], env)
     second = eval(sexp[2], env)
     if type(first) != list and type(second) != list:
-        return 't' if first == second else []
+        return Symbol('t') if first == second else []
     else:
         return []
 
