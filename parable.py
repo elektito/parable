@@ -19,7 +19,16 @@ def destructure(params, args):
         print '    Expected a list in the arguments, got:', args
         exit(2)
 
-    if len(params) != len(args):
+    if len(params) >= 2 and params[-2] == Symbol('&rest'):
+        if len(args) < len(params) - 2:
+            print 'Parameter list and the provided arguments do not match.'
+            print '    Expected at least {} argument(s) but got {}.'.format(
+                len(params) - 2, len(args))
+            exit(2)
+
+        args = args[:len(params) - 2] + [args[len(params) - 2:]]
+        del params[-2]
+    elif len(params) != len(args):
         print 'Parameter list and the provided arguments do not match.'
         print '    Expected {} argument(s) but got {}.'.format(len(params), len(args))
         exit(2)
