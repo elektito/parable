@@ -186,7 +186,18 @@ def read_item(f):
     if b == "'":
         return [Symbol('quote'), read(f)]
 
-    while b and b not in '() \'\n':
+    if b == ';':
+        while b and b != '\n':
+            b = f.read(1)
+        b = f.read(1)
+
+        if b == '(':
+            f.seek(-1, 1)
+            return read_list(f)
+        elif b == '':
+            return None
+
+    while b and b not in '() \'\n;':
         item += b
         b = f.read(1)
 
@@ -218,6 +229,12 @@ def read_list(f):
 
     while True:
         b = f.read(1)
+
+        if b == ';':
+            while b and b != '\n':
+                b = f.read(1)
+            b = f.read(1)
+
         while b and b in ' \n':
             b = f.read(1)
         if not b:

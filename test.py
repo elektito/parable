@@ -29,6 +29,19 @@ class ParableCoreTest(unittest.TestCase):
         result = parable.read_str(exp)
         self.assertEqual(result, None)
 
+    def test_comments(self):
+        exp = "x ;foobar"
+        result = parable.read_str(exp)
+        self.assertEqual(result, Symbol('x'))
+
+        exp = "(x;comment as a separator\ny)"
+        result = parable.read_str(exp)
+        self.assertEqual(result, [Symbol('x'), Symbol('y')])
+
+        exp = ";beginning comments\n(x ;foobar\ny); end comments\n"
+        result = parable.read_str(exp)
+        self.assertEqual(result, [Symbol('x'), Symbol('y')])
+
     def test_shorthand_quote(self):
         exp = "'x"
         result = self.eval_str(exp)
