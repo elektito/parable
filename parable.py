@@ -136,10 +136,10 @@ def eval_sexp(sexp, env):
     body = first[2]
     args = sexp[1:]
 
-    if params[-1] == Symbol('&rest'):
-        if len(args) < len(params) - 1:
+    if params[-2] == Symbol('&rest'):
+        if len(args) < len(params) - 2:
             print 'Expected at least {} argument(s) but got {}.'.format(
-                len(params) - 1, len(args))
+                len(params) - 2, len(args))
             exit(2)
     elif len(args) != len(params):
         print 'Expected {} argument(s) but got {}.'.format(len(params), len(args))
@@ -153,8 +153,9 @@ def eval_sexp(sexp, env):
         # evaluate arguments.
         args = [eval(i, env) for i in args]
 
-        if params[-1] == Symbol('&rest'):
-            args = args[:len(params) - 1] + [args[len(params) - 1:]]
+        if params[-2] == Symbol('&rest'):
+            args = args[:len(params) - 2] + [args[len(params) - 2:]]
+            del params[-2]
 
         return eval(body, dict(env, **dict(zip(params, args))))
     elif first[0] == Symbol('mac'):

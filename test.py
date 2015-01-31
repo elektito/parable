@@ -106,12 +106,12 @@ class ParableCoreTest(unittest.TestCase):
         self.assertEqual(result, Symbol('b'))
 
     def test_function_call_with_rest(self):
-        exp = "((fn (a b &rest) (prep a (prep b &rest))) 'a 'b 'c 'd)"
+        exp = "((fn (a b &rest r) (prep a (prep b r))) 'a 'b 'c 'd)"
         result = self.eval_str(exp)
         self.assertEqual(result, [Symbol('a'), Symbol('b'), Symbol('c'), Symbol('d')])
 
         # test sending nothing for &rest
-        exp = "((fn (a b &rest) (prep a (prep b &rest))) 'a 'b)"
+        exp = "((fn (a b &rest r) (prep a (prep b r))) 'a 'b)"
         result = self.eval_str(exp)
         self.assertEqual(result, [Symbol('a'), Symbol('b')])
 
