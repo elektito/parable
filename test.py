@@ -21,7 +21,7 @@ class SymbolTest(unittest.TestCase):
 
 class ParableCoreTest(unittest.TestCase):
     def eval_str(self, s):
-        exp = parable.parse_str(s)
+        exp = parable.read_str(s)
         return parable.eval(exp, {})
 
     def test_empty(self):

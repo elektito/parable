@@ -263,6 +263,3 @@ def read(f):
 
 def read_str(s):
     return read(StringIO(s))
-
-def parse_str(s):
-    return read(StringIO(s))
