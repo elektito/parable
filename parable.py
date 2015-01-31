@@ -136,7 +136,7 @@ def eval_sexp(sexp, env):
     body = first[2]
     args = sexp[1:]
 
-    if params[-2] == Symbol('&rest'):
+    if len(params) >= 2 and params[-2] == Symbol('&rest'):
         if len(args) < len(params) - 2:
             print 'Expected at least {} argument(s) but got {}.'.format(
                 len(params) - 2, len(args))
