@@ -236,8 +236,7 @@ def read_list(f):
 def read(f):
     b = f.read(1)
     if not b:
-        print 'Unexpected end of file.'
-        exit(1)
+        return None
 
     f.seek(-1, 1)
     if b == '(':

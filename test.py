@@ -24,6 +24,11 @@ class ParableCoreTest(unittest.TestCase):
         exp = parable.parse_str(s)
         return parable.eval(exp, {})
 
+    def test_empty(self):
+        exp = ''
+        result = parable.read_str(exp)
+        self.assertEqual(result, None)
+
     def test_shorthand_quote(self):
         exp = "'x"
         result = self.eval_str(exp)
