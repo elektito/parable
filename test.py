@@ -105,6 +105,16 @@ class ParableCoreTest(unittest.TestCase):
         result = self.eval_str(exp)
         self.assertEqual(result, Symbol('b'))
 
+    def test_function_call_with_rest(self):
+        exp = "((fn (a b &rest) (prep a (prep b &rest))) 'a 'b 'c 'd)"
+        result = self.eval_str(exp)
+        self.assertEqual(result, [Symbol('a'), Symbol('b'), Symbol('c'), Symbol('d')])
+
+        # test sending nothing for &rest
+        exp = "((fn (a b &rest) (prep a (prep b &rest))) 'a 'b)"
+        result = self.eval_str(exp)
+        self.assertEqual(result, [Symbol('a'), Symbol('b')])
+
     def test_macro_call(self):
         exp = "((mac (a b c) b) (a b) (if 't 'a 'b) (p q))"
         result = self.eval_str(exp)
