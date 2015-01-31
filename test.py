@@ -38,6 +38,10 @@ class ParableCoreTest(unittest.TestCase):
         result = parable.read_str(exp)
         self.assertEqual(result, [Symbol('x'), Symbol('y')])
 
+        exp = "x;comment as separator"
+        result = parable.read_str(exp)
+        self.assertEqual(result, Symbol('x'))
+
         exp = ";beginning comments\n(x ;foobar\ny); end comments\n"
         result = parable.read_str(exp)
         self.assertEqual(result, [Symbol('x'), Symbol('y')])
