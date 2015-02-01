@@ -29,6 +29,23 @@ class ParableCoreTest(unittest.TestCase):
         result = parable.read_str(exp)
         self.assertEqual(result, None)
 
+        exp = '\n\n\n\n\t    \n\n'
+        result = parable.read_str(exp)
+        self.assertEqual(result, None)
+
+    def test_whitespace(self):
+        exp = '   x'
+        result = parable.read_str(exp)
+        self.assertEqual(result, Symbol('x'))
+
+        exp = '\n\nx\n\n\n\n'
+        result = parable.read_str(exp)
+        self.assertEqual(result, Symbol('x'))
+
+        exp = '(\na\tb c\nd\re  \n)'
+        result = parable.read_str(exp)
+        self.assertEqual(result, [Symbol('a'), Symbol('b'), Symbol('c'), Symbol('d'), Symbol('e')])
+
     def test_comments(self):
         exp = "x ;foobar"
         result = parable.read_str(exp)

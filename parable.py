@@ -214,7 +214,7 @@ def read_item(f):
         elif b == '':
             return None
 
-    while b and b not in '() \'\n;':
+    while b and b not in '() \'\n\t\r;':
         item += b
         b = f.read(1)
 
@@ -251,7 +251,7 @@ def read_list(f):
                 b = f.read(1)
             b = f.read(1)
 
-        while b and b in ' \n':
+        while b and b in ' \t\r\n':
             b = f.read(1)
         if not b:
             raise ReadError('Unexpected end of file.')
@@ -267,6 +267,8 @@ def read_list(f):
 
 def read(f):
     b = f.read(1)
+    while b and b in ' \t\n\r':
+        b = f.read(1)
     if not b:
         return None
 
