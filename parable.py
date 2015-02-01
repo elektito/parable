@@ -1,5 +1,11 @@
 from cStringIO import StringIO
 
+class ReadError(RuntimeError):
+    pass
+
+class EvalError(RuntimeError):
+    pass
+
 class Symbol(object):
     def __init__(self, name):
         self.name = name
@@ -15,23 +21,22 @@ class Symbol(object):
 
 def destructure(params, args):
     if type(params) == list and type(args) != list:
-        print 'Parameter list and the provided arguments do not match.'
-        print '    Expected a list in the arguments, got:', args
-        exit(2)
+        raise EvalError('Parameter list and the provided arguments do not match.\n'
+                        '    Expected a list in the arguments, got: {}'
+                        .format(args))
 
     if len(params) >= 2 and params[-2] == Symbol('&rest'):
         if len(args) < len(params) - 2:
-            print 'Parameter list and the provided arguments do not match.'
-            print '    Expected at least {} argument(s) but got {}.'.format(
-                len(params) - 2, len(args))
-            exit(2)
+            raise EvalError('Parameter list and the provided arguments do not match.\n'
+                            '    Expected at least {} argument(s) but got {}.'
+                            .format(len(params) - 2, len(args)))
 
         args = args[:len(params) - 2] + [args[len(params) - 2:]]
         del params[-2]
     elif len(params) != len(args):
-        print 'Parameter list and the provided arguments do not match.'
-        print '    Expected {} argument(s) but got {}.'.format(len(params), len(args))
-        exit(2)
+        raise EvalError('Parameter list and the provided arguments do not match.\n'
+                        '    Expected {} argument(s) but got {}.'
+                        .format(len(params), len(args)))
 
     env = {}
     for p, a in zip(params, args):
@@ -40,14 +45,15 @@ def destructure(params, args):
         elif type(p) == list:
             env.update(destructure(p, a))
         else:
-            print 'Only symbols and lists allowed in parameter list; got a', type(p)
-            exit(2)
+            raise EvalError('Only symbols and lists allowed in parameter list; got a', type(p))
 
     return env
 
 def eval_if(sexp, env):
     assert sexp[0].name == 'if'
-    assert len(sexp) == 4
+    if len(sexp) != 4:
+        raise EvalError('`if` form accepts exactly 3 arguments; {} given.'.format(len(sexp) - 1))
+
     cond = eval(sexp[1], env)
     if cond == []:
         return eval(sexp[3], env)
@@ -56,11 +62,15 @@ def eval_if(sexp, env):
 
 def eval_quote(sexp, env):
     assert sexp[0].name == 'quote'
-    assert len(sexp) == 2
+    if len(sexp) != 2:
+        raise EvalError('`if` form accepts exactly 1 argument; {} given.'.format(len(sexp) - 1))
     return sexp[1]
 
 def eval_atom(sexp, env):
     assert sexp[0].name == 'atom'
+    if len(sexp) != 2:
+        raise EvalError('`atom` form accepts exactly 1 argument; {} given.'.format(len(sexp) - 1))
+
     val = eval(sexp[1], env)
     if type(val) == list:
         return []
@@ -69,29 +79,36 @@ def eval_atom(sexp, env):
 
 def eval_first(sexp, env):
     assert sexp[0].name == 'first'
-    assert len(sexp) == 2
+    if len(sexp) != 2:
+        raise EvalError('`first` form accepts exactly 1 argument; {} given.'.format(len(sexp) - 1))
     ret = eval(sexp[1], env)
-    assert type(ret) == list
+    if type(ret) != list:
+        raise EvalError('`first` argument must be a list.')
     return ret[0]
 
 def eval_rest(sexp, env):
     assert sexp[0].name == 'rest'
-    assert len(sexp) == 2
+    if len(sexp) != 2:
+        raise EvalError('`rest` form accepts exactly 1 argument; {} given.'.format(len(sexp) - 1))
     ret = eval(sexp[1], env)
-    assert type(ret) == list
+    if type(ret) != list:
+        raise EvalError('`rerst` argument must be a list.')
     return ret[1:]
 
 def eval_prep(sexp, env):
     assert sexp[0].name == 'prep'
-    assert len(sexp) == 3
+    if len(sexp) != 3:
+        raise EvalError('`prep` form accepts exactly 2 argument; {} given.'.format(len(sexp) - 1))
     first = eval(sexp[1], env)
     rest = eval(sexp[2], env)
-    assert type(rest) == list
+    if type(rest) != list:
+        raise EvalError('`prep` second argument must be a list.')
     return [first] + rest
 
 def eval_eq(sexp, env):
     assert sexp[0].name == 'eq'
-    assert len(sexp) == 3
+    if len(sexp) != 3:
+        raise EvalError('`first` form accepts exactly 2 argument; {} given.'.format(len(sexp) - 1))
     first = eval(sexp[1], env)
     second = eval(sexp[2], env)
     if type(first) != list and type(second) != list:
@@ -108,8 +125,7 @@ def eval(exp, env):
         return exp
 
     if exp not in env:
-        print 'Undefined variable:', exp.name
-        exit(1)
+        raise EvalError('Undefined variable: {}'.format(exp.name))
 
     return env[exp]
 
@@ -120,7 +136,8 @@ def eval_sexp(sexp, env):
     first = sexp[0]
 
     if first in (Symbol('fn'), Symbol('mac')):
-        assert len(sexp) == 3
+        if len(sexp) != 3:
+            raise EvalError('Invalid fn/mac expression.')
         return sexp
 
     map = {Symbol('if'): eval_if,
@@ -137,9 +154,10 @@ def eval_sexp(sexp, env):
     # it must be a function or macro call then.
 
     first = eval(sexp[0], env)
-    assert type(first) == list
-    assert type(first[1]) == list
-    assert len(first) == 3
+    if type(first) != list:
+        raise EvalError('Expected to find an fn or mac expression.')
+    if type(first[1]) != list:
+        raise EvalError('Invalid argument list; not a list.')
 
     params = first[1]
     body = first[2]
@@ -147,17 +165,16 @@ def eval_sexp(sexp, env):
 
     if len(params) >= 2 and params[-2] == Symbol('&rest'):
         if len(args) < len(params) - 2:
-            print 'Expected at least {} argument(s) but got {}.'.format(
-                len(params) - 2, len(args))
-            exit(2)
+            raise EvalError('Expected at least {} argument(s) but got {}.'
+                            .format(len(params) - 2, len(args)))
     elif len(args) != len(params):
-        print 'Expected {} argument(s) but got {}.'.format(len(params), len(args))
-        exit(2)
+        raise EvalError('Expected {} argument(s) but got {}.'
+                        .format(len(params), len(args)))
 
     if first[0] == Symbol('fn'):
         if any(type(i) != Symbol for i in params):
-            print 'Function parameter list should only contain symbols.'
-            exit(2)
+            raise EvalError(
+                'Function parameter list should only contain symbols.')
 
         # evaluate arguments.
         args = [eval(i, env) for i in args]
@@ -177,8 +194,8 @@ def eval_sexp(sexp, env):
         # evaluate the result of expansion.
         return eval(expanded, env)
     else:
-        print 'Expected a macro or a function, got:', first
-        exit(2)
+        raise EvalError('Expected a macro or a function, got: {}'
+                        .format(first))
 
 def read_item(f):
     item = ''
@@ -222,8 +239,7 @@ def read_item(f):
 def read_list(f):
     b = f.read(1)
     if not b or b != '(':
-        print 'Expected "(".'
-        exit(1)
+        raise ReadError('Expected "(".')
 
     items = []
 
@@ -238,8 +254,7 @@ def read_list(f):
         while b and b in ' \n':
             b = f.read(1)
         if not b:
-            print 'Unexpected end of file.'
-            exit(1)
+            raise ReadError('Unexpected end of file.')
 
         if b == ')':
             return items
