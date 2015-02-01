@@ -158,7 +158,7 @@ def eval_sexp(sexp, env):
 
     first = eval(sexp[0], env)
     if type(first) != list:
-        raise EvalError('Expected to find an fn or mac expression.')
+        raise EvalError('Not a function or a macro: {}'.format(first))
     if type(first[1]) != list:
         raise EvalError('Invalid argument list; not a list.')
 
