@@ -182,7 +182,7 @@ def eval_sexp(sexp, env):
         # evaluate arguments.
         args = [eval(i, env) for i in args]
 
-        if params[-2] == Symbol('&rest'):
+        if len(params) >= 2 and params[-2] == Symbol('&rest'):
             args = args[:len(params) - 2] + [args[len(params) - 2:]]
             del params[-2]
 
