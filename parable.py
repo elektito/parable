@@ -3,6 +3,9 @@ from cStringIO import StringIO
 class ReadError(RuntimeError):
     pass
 
+class EofReadError(ReadError):
+    pass
+
 class EvalError(RuntimeError):
     pass
 
@@ -254,7 +257,7 @@ def read_list(f):
         while b and b in ' \t\r\n':
             b = f.read(1)
         if not b:
-            raise ReadError('Unexpected end of file.')
+            raise EofReadError('Unexpected end of file.')
 
         if b == ')':
             return items
