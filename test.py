@@ -175,5 +175,14 @@ class ParableCoreTest(unittest.TestCase):
         result = eval_str(exp)
         self.assertEqual(result, Symbol('a'))
 
+class ParableUtilsTest(unittest.TestCase):
+    def test_macro_expand(self):
+        exp = "((mac (a) '((mac () 1000))) 'x))"
+        exp = parable.read_str(exp)
+        result = parable.macro_expand(exp, {}, once=True)
+        self.assertEqual(result, [[Symbol('mac'), [], 1000]])
+        result = parable.macro_expand(exp, {}, once=False)
+        self.assertEqual(result, 1000)
+
 if __name__ == '__main__':
     unittest.main()
