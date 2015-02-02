@@ -176,12 +176,65 @@ class ParableCoreTest(unittest.TestCase):
         self.assertEqual(result, Symbol('a'))
 
 class ParableUtilsTest(unittest.TestCase):
-    def test_macro_expand(self):
+    def test_macro_expand_single(self):
+        exp = "((mac (a) 'a) 'x))"
+        exp = parable.read_str(exp)
+
+        result, expanded = parable.macro_expand_1(exp, {})
+        self.assertTrue(expanded)
+        self.assertEqual(result, Symbol('a'))
+
+        result, expanded = parable.macro_expand(exp, {})
+        self.assertTrue(expanded)
+        self.assertEqual(result, Symbol('a'))
+
+    def test_macro_expand_multi(self):
         exp = "((mac (a) '((mac () 1000))) 'x))"
         exp = parable.read_str(exp)
-        result = parable.macro_expand(exp, {}, once=True)
+
+        result, expanded = parable.macro_expand_1(exp, {})
+        self.assertTrue(expanded)
         self.assertEqual(result, [[Symbol('mac'), [], 1000]])
-        result = parable.macro_expand(exp, {}, once=False)
+
+        result, expanded = parable.macro_expand(exp, {})
+        self.assertTrue(expanded)
+        self.assertEqual(result, 1000)
+
+    def test_macro_expand_none(self):
+        exp = "x"
+        exp = parable.read_str(exp)
+        result, expanded = parable.macro_expand_1(exp, {})
+        self.assertFalse(expanded)
+        self.assertEqual(result, Symbol('x'))
+        result, expanded = parable.macro_expand(exp, {})
+        self.assertFalse(expanded)
+        self.assertEqual(result, Symbol('x'))
+
+        exp = "()"
+        exp = parable.read_str(exp)
+        result, expanded = parable.macro_expand_1(exp, {})
+        self.assertFalse(expanded)
+        self.assertEqual(result, [])
+        result, expanded = parable.macro_expand(exp, {})
+        self.assertFalse(expanded)
+        self.assertEqual(result, [])
+
+        exp = "(car x)"
+        exp = parable.read_str(exp)
+        result, expanded = parable.macro_expand_1(exp, {})
+        self.assertFalse(expanded)
+        self.assertEqual(result, [Symbol('car'), Symbol('x')])
+        result, expanded = parable.macro_expand(exp, {})
+        self.assertFalse(expanded)
+        self.assertEqual(result, [Symbol('car'), Symbol('x')])
+
+        exp = "1000"
+        exp = parable.read_str(exp)
+        result, expanded = parable.macro_expand_1(exp, {})
+        self.assertFalse(expanded)
+        self.assertEqual(result, 1000)
+        result, expanded = parable.macro_expand(exp, {})
+        self.assertFalse(expanded)
         self.assertEqual(result, 1000)
 
 if __name__ == '__main__':

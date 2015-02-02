@@ -55,41 +55,49 @@ def destructure(params, args):
 
     return env
 
-def macro_expand(exp, env, once=True):
-    while True:
-        if type(exp) != list or len(exp) == 0:
-            return exp
+def macro_expand_1(exp, env):
+    if type(exp) != list or len(exp) == 0:
+        return exp, False
 
+    try:
         first = eval(exp[0], env)
-        if type(first) != list:
-            return exp
-        if len(first) < 2 or first[0] != Symbol('mac'):
-            return exp
+    except EvalError:
+        return exp, False
 
-        if type(first[1]) != list:
-            raise EvalError('Invalid argument list; not a list.')
+    if type(first) != list:
+        return exp, False
+    if len(first) < 2 or first[0] != Symbol('mac'):
+        return exp, False
 
-        params = first[1]
-        body = first[2]
-        args = exp[1:]
+    if type(first[1]) != list:
+        raise EvalError('Invalid argument list; not a list.')
 
-        if len(params) >= 2 and params[-2] == Symbol('&rest'):
-            if len(args) < len(params) - 2:
-                raise EvalError('Expected at least {} argument(s) but got {}.'
-                                .format(len(params) - 2, len(args)))
-        elif len(args) != len(params):
-            raise EvalError('Expected {} argument(s) but got {}.'
-                            .format(len(params), len(args)))
+    params = first[1]
+    body = first[2]
+    args = exp[1:]
 
-        extra_env = destructure(params, args)
-        expanded = eval(body, dict(env, **extra_env))
+    if len(params) >= 2 and params[-2] == Symbol('&rest'):
+        if len(args) < len(params) - 2:
+            raise EvalError('Expected at least {} argument(s) but got {}.'
+                            .format(len(params) - 2, len(args)))
+    elif len(args) != len(params):
+        raise EvalError('Expected {} argument(s) but got {}.'
+                        .format(len(params), len(args)))
 
-        exp = expanded
+    extra_env = destructure(params, args)
+    expanded = eval(body, dict(env, **extra_env))
 
-        if once:
-            break
+    return expanded, True
 
-    return exp
+def macro_expand(exp, env):
+    result, is_expanded = macro_expand_1(exp, env)
+    if not is_expanded:
+        return result, False
+
+    while is_expanded:
+        result, is_expanded = macro_expand_1(result, env)
+
+    return result, True
 
 def eval_if(sexp, env):
     assert sexp[0].name == 'if'
