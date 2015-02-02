@@ -231,7 +231,7 @@ def eval_sexp(sexp, env):
 
         if len(params) >= 2 and params[-2] == Symbol('&rest'):
             args = args[:len(params) - 2] + [args[len(params) - 2:]]
-            del params[-2]
+            params = params[:-2] + params[-1:]
 
         return eval(body, dict(env, **dict(zip(params, args))))
     elif first[0] == Symbol('mac'):

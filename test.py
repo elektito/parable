@@ -21,9 +21,9 @@ class SymbolTest(unittest.TestCase):
         self.assertEqual(d[Symbol('foo')], 2000)
         self.assertEqual(d[Symbol('bar')], 3000)
 
-def eval_str(s):
+def eval_str(s, env={}):
     exp = parable.read_str(s)
-    return parable.eval(exp, {})
+    return parable.eval(exp, env)
 
 class ParableCoreTest(unittest.TestCase):
     def test_empty(self):
@@ -149,6 +149,14 @@ class ParableCoreTest(unittest.TestCase):
         exp = "((fn (a b c) b) 'a 'b 'c)"
         result = eval_str(exp)
         self.assertEqual(result, Symbol('b'))
+
+    def test_nested_function_call(self):
+        list_func = '(fn (&rest r) r)'
+        list_func = eval_str(list_func)
+        env = {Symbol('list'): list_func}
+        exp = "(list 1 (list 100 200) 2)"
+        result = eval_str(exp, env)
+        self.assertEqual(result, [1, [100, 200], 2])
 
     def test_function_call_with_rest(self):
         exp = "((fn (a b &rest r) (prep a (prep b r))) 'a 'b 'c 'd)"
