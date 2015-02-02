@@ -16,6 +16,9 @@ class Symbol(object):
     def __eq__(self, other):
         return type(other) == Symbol and self.name == other.name
 
+    def __ne__(self, other):
+        return type(other) != Symbol or self.name != other.name
+
     def __hash__(self):
         return hash(self.name)
 

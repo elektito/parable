@@ -5,10 +5,12 @@ import unittest
 
 class SymbolTest(unittest.TestCase):
     def test_equal(self):
-        self.assertEqual(Symbol('foo'), Symbol('foo'))
+        self.assertTrue(Symbol('foo') == Symbol('foo'))
+        self.assertFalse(Symbol('foo') == Symbol('bar'))
 
     def test_not_equal(self):
-        self.assertNotEqual(Symbol('foo'), Symbol('bar'))
+        self.assertFalse(Symbol('foo') != Symbol('foo'))
+        self.assertTrue(Symbol('foo') != Symbol('bar'))
 
     def test_hash(self):
         d = {}
