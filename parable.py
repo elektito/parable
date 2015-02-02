@@ -247,22 +247,25 @@ def eval_sexp(sexp, env):
         raise EvalError('Expected a macro or a function, got: {}'
                         .format(first))
 
+def skip_whitespace(f):
+    b = f.read(1)
+    while b:
+        if b not in '; \t\r\n':
+            f.seek(-1, 1)
+            break
+
+        if b == ';':
+            while b and b != '\n':
+                b = f.read(1)
+
+        b = f.read(1)
+
 def read_item(f):
+    skip_whitespace(f)
     item = ''
     b = f.read(1)
     if b == "'":
         return [Symbol('quote'), read(f)]
-
-    if b == ';':
-        while b and b != '\n':
-            b = f.read(1)
-        b = f.read(1)
-
-        if b == '(':
-            f.seek(-1, 1)
-            return read_list(f)
-        elif b == '':
-            return None
 
     while b and b not in '() \'\n\t\r;':
         item += b
@@ -294,15 +297,9 @@ def read_list(f):
     items = []
 
     while True:
+        skip_whitespace(f)
         b = f.read(1)
 
-        if b == ';':
-            while b and b != '\n':
-                b = f.read(1)
-            b = f.read(1)
-
-        while b and b in ' \t\r\n':
-            b = f.read(1)
         if not b:
             raise EofReadError('Unexpected end of file.')
 
@@ -316,9 +313,8 @@ def read_list(f):
             items.append(read_item(f))
 
 def read(f):
+    skip_whitespace(f)
     b = f.read(1)
-    while b and b in ' \t\n\r':
-        b = f.read(1)
     if not b:
         return None
 

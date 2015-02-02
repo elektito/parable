@@ -67,12 +67,16 @@ class ParableCoreTest(unittest.TestCase):
 
     def test_shorthand_quote(self):
         exp = "'x"
-        result = eval_str(exp)
-        self.assertEqual(result, Symbol('x'))
+        result = parable.read_str(exp)
+        self.assertEqual(result, [Symbol('quote'), Symbol('x')])
 
-        exp = "(first '(x y))"
-        result = eval_str(exp)
-        self.assertEqual(result, Symbol('x'))
+        exp = "'   x"
+        result = parable.read_str(exp)
+        self.assertEqual(result, [Symbol('quote'), Symbol('x')])
+
+        exp = "'(x y)"
+        result = parable.read_str(exp)
+        self.assertEqual(result, [Symbol('quote'), [Symbol('x'), Symbol('y')]])
 
         # quote character as a separator (no space before the second
         # quote).
