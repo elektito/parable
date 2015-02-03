@@ -142,7 +142,7 @@ def eval_rest(sexp, env):
         raise EvalError('`rest` form accepts exactly 1 argument; {} given.'.format(len(sexp) - 1))
     ret = eval(sexp[1], env)
     if type(ret) != list:
-        raise EvalError('`rerst` argument must be a list.')
+        raise EvalError('`rest` argument must be a list.')
     return ret[1:]
 
 def eval_prep(sexp, env):
