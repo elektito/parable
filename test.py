@@ -113,6 +113,14 @@ class ParableCoreTest(unittest.TestCase):
         result = eval_str(exp)
         self.assertEqual(result, Symbol('t'))
 
+        exp = "(atom 10)"
+        result = eval_str(exp)
+        self.assertEqual(result, Symbol('t'))
+
+        exp = '(atom "foo")'
+        result = eval_str(exp)
+        self.assertEqual(result, Symbol('t'))
+
         exp = "(atom '(x y))"
         result = eval_str(exp)
         self.assertEqual(result, [])
