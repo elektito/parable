@@ -37,10 +37,43 @@
           (remove-if func (rest lst))
           (prep (first lst) (remove-if func (rest lst))))))
 
+(defun second (lst)
+  (first (rest lst)))
+
 (defun ffirst (lst)
   (first (first lst)))
 
+(defun rfirst (lst)
+  (rest (first lst)))
+
 (defun firsts (lists)
-  (if (null lists)
+  (mapf (fn (l) (first l)) lists))
+
+(defun rests (lists)
+  (mapf (fn (l) (rest l)) lists))
+
+(defun any (values)
+  (if (null values)
       '()
-      (prep (ffirst lists) (firsts (rest lists)))))
+      (if (first values)
+          't
+          (any (rest values)))))
+
+(defun all (values)
+  (if (null values)
+      't
+      (if (first values)
+          (all (rest values))
+          '())))
+
+(defun zip1 (lists)
+  (if (any (mapf null lists))
+      '()
+      (prep (firsts lists) (zip1 (rests lists)))))
+
+(defun zip (&rest lists)
+  (zip1 lists))
+
+(defmac let (pairs form)
+  (prep (list 'fn (firsts pairs) form)
+        (mapf second pairs)))
