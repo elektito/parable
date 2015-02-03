@@ -77,3 +77,14 @@
 (defmac let (pairs form)
   (prep (list 'fn (firsts pairs) form)
         (mapf second pairs)))
+
+(defun cond1 (pairs)
+  (if (null pairs)
+      '()
+      (list 'if
+            (ffirst pairs)
+            (second (first pairs))
+            (list 'cond (rest pairs)))))
+
+(defmac cond (&rest pairs)
+  (cond1 pairs))
