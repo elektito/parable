@@ -173,6 +173,8 @@ def eval(exp, env):
         return exp
     elif type(exp) == str:
         return exp
+    elif exp == Symbol('nil'):
+        return []
 
     if exp not in env:
         raise EvalError('Undefined variable: {}'.format(exp.name))

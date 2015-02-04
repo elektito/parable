@@ -94,6 +94,15 @@ class ParableCoreTest(unittest.TestCase):
         result = eval_str(exp)
         self.assertEqual(result, 'foobar')
 
+    def test_nil(self):
+        exp = "nil"
+        result = eval_str(exp)
+        self.assertEqual(result, [])
+
+        exp = "'()"
+        result = eval_str(exp)
+        self.assertEqual(result, [])
+
     def test_if(self):
         exp = "(if 't 'a 'b)"
         result = eval_str(exp)
