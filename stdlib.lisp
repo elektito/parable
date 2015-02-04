@@ -88,3 +88,6 @@
 
 (defmac cond (&rest pairs)
   (cond1 pairs))
+
+(defmac when (condition body)
+  (list 'if condition body '()))
