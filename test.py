@@ -162,6 +162,26 @@ class ParableCoreTest(unittest.TestCase):
         result = eval_str(exp)
         self.assertEqual(result, [])
 
+        exp = "(eq 1 1)"
+        result = eval_str(exp)
+        self.assertEqual(result, Symbol('t'))
+
+        exp = "(eq 1 2)"
+        result = eval_str(exp)
+        self.assertEqual(result, [])
+
+        exp = '(eq "foo" "foo")'
+        result = eval_str(exp)
+        self.assertEqual(result, Symbol('t'))
+
+        exp = '(eq "foo" "fooo")'
+        result = eval_str(exp)
+        self.assertEqual(result, [])
+
+        exp = '(eq 1 "1")'
+        result = eval_str(exp)
+        self.assertEqual(result, [])
+
     def test_function_call(self):
         exp = "((fn (a b c) b) 'a 'b 'c)"
         result = eval_str(exp)
