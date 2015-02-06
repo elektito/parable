@@ -168,6 +168,15 @@ def eval_eq(sexp, env):
     else:
         return []
 
+def eval_apply(sexp, env):
+    assert sexp[0].name == 'apply'
+    if len(sexp) != 3:
+        raise EvalError('`apply` expects 2 arguments; {} given.'.format(len(sexp) - 1))
+
+    func = sexp[1]
+    args = eval(sexp[2], env)
+    return eval([func] + args, env)
+
 def eval(exp, env):
     if type(exp) == list:
         return eval_sexp(exp, env)
@@ -200,7 +209,8 @@ def eval_sexp(sexp, env):
            Symbol('typeof'): eval_typeof,
            Symbol('first'): eval_first,
            Symbol('rest'): eval_rest,
-           Symbol('eq'): eval_eq}
+           Symbol('eq'): eval_eq,
+           Symbol('apply'): eval_apply}
 
     if type(first) == Symbol and first in map:
         return map[first](sexp, env)

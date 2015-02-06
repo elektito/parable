@@ -182,6 +182,15 @@ class ParableCoreTest(unittest.TestCase):
         result = eval_str(exp)
         self.assertEqual(result, [])
 
+    def test_apply(self):
+        exp = "(apply (fn (x y) (prep y (prep x '()))) '(10 20))"
+        result = eval_str(exp)
+        self.assertEqual(result, [20, 10])
+
+        exp = "(apply (fn () 10) '())"
+        result = eval_str(exp)
+        self.assertEqual(result, 10)
+
     def test_function_call(self):
         exp = "((fn (a b c) b) 'a 'b 'c)"
         result = eval_str(exp)
