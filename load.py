@@ -22,10 +22,10 @@ def load(f):
         expanded, _ = macro_expand(form, env)
 
         if type(expanded) != list or len(expanded) != 3 or expanded[0] != Symbol('define'):
-            raise TransformWarning('Unrecognized top-level form.', expanded)
+            raise LoadWarning('Unrecognized top-level form.', expanded)
 
         if type(expanded[1]) != Symbol:
-            raise TransformError('Invalid top-level form.', form)
+            raise LoadError('Invalid top-level form.', form)
 
         env[expanded[1]] = expanded[2]
 
