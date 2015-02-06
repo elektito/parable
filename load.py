@@ -1,4 +1,5 @@
-from parable import read, Symbol, eval as eval_form, read_str, ReadError, EvalError, macro_expand, EofReadError
+from parable import Symbol, eval as eval_form, EvalError, macro_expand
+from read import Reader, ReadError, EofReadError
 
 class LoadWarning(RuntimeWarning):
     def __init__(self, msg, form):
@@ -11,8 +12,9 @@ class LoadError(RuntimeError):
         self.form = form
 
 def load(f, env):
+    reader = Reader(f)
     while True:
-        form = read(f)
+        form = reader.read()
 
         if form == None:
             break
@@ -62,7 +64,7 @@ if __name__ == '__main__':
                 exit(11)
 
     try:
-        ret = eval_form(read_str(argv[-1]), env)
+        ret = eval_form(Reader(argv[-1]).read(), env)
     except ReadError as e:
         print 'Read Error:', e
     except EvalError as e:

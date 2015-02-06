@@ -1,11 +1,5 @@
 from cStringIO import StringIO
 
-class ReadError(RuntimeError):
-    pass
-
-class EofReadError(ReadError):
-    pass
-
 class EvalError(RuntimeError):
     pass
 
@@ -273,83 +267,3 @@ def eval_sexp(sexp, env):
     else:
         raise EvalError('Expected a macro or a function, got: {}'
                         .format(first))
-
-def skip_whitespace(f):
-    b = f.read(1)
-    while b:
-        if b not in '; \t\r\n':
-            f.seek(-1, 1)
-            break
-
-        if b == ';':
-            while b and b != '\n':
-                b = f.read(1)
-
-        b = f.read(1)
-
-def read_item(f):
-    skip_whitespace(f)
-    item = ''
-    b = f.read(1)
-    if b == "'":
-        return [Symbol('quote'), read(f)]
-
-    while b and b not in '() \'\n\t\r;':
-        item += b
-        b = f.read(1)
-
-    if b:
-        f.seek(-1, 1)
-
-    try:
-        # is this an integer?
-        integer = int(item)
-
-        # yes, it is.
-        return integer
-    except:
-        pass # not an integer
-
-    # is it a string literal?
-    if len(item) >= 2 and item[0] == '"' and item[-1] == '"':
-        return item[1:-1]
-
-    return Symbol(item)
-
-def read_list(f):
-    b = f.read(1)
-    if not b or b != '(':
-        raise ReadError('Expected "(".')
-
-    items = []
-
-    while True:
-        skip_whitespace(f)
-        b = f.read(1)
-
-        if not b:
-            raise EofReadError('Unexpected end of file.')
-
-        if b == ')':
-            return items
-
-        f.seek(-1, 1)
-        if b == '(':
-            items.append(read_list(f))
-        else:
-            items.append(read_item(f))
-
-def read(f):
-    skip_whitespace(f)
-    b = f.read(1)
-    if not b:
-        return None
-
-    f.seek(-1, 1)
-    if b == '(':
-        return read_list(f)
-    else:
-        return read_item(f)
-
-def read_str(s):
-    return read(StringIO(s))
