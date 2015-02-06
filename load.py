@@ -1,4 +1,4 @@
-from parable import Symbol, eval as eval_form, EvalError, macro_expand
+from parable import Symbol, eval as eval_form, EvalError, macro_expand, List
 from read import Reader, ReadError, EofReadError
 
 class LoadWarning(RuntimeWarning):
@@ -11,8 +11,8 @@ class LoadError(RuntimeError):
         super(LoadError, self).__init__(msg)
         self.form = form
 
-def load(f, env):
-    reader = Reader(f)
+def load(f, filename, env):
+    reader = Reader(f, filename)
     while True:
         form = reader.read()
 
@@ -21,7 +21,7 @@ def load(f, env):
 
         expanded, _ = macro_expand(form, env)
 
-        if type(expanded) != list or len(expanded) != 3 or expanded[0] != Symbol('define'):
+        if type(expanded) != List or len(expanded) != 3 or expanded[0] != Symbol('define'):
             raise LoadWarning('Unrecognized top-level form.', expanded)
 
         if type(expanded[1]) != Symbol:
@@ -45,7 +45,7 @@ if __name__ == '__main__':
     for filename in files:
         with open(filename) as f:
             try:
-                env.update(load(f, env))
+                env.update(load(f, filename, env))
             except LoadWarning as w:
                 print 'Warning in file {}:'.format(filename), w
                 if w.form != None:
@@ -64,10 +64,12 @@ if __name__ == '__main__':
                 exit(11)
 
     try:
-        ret = eval_form(Reader(argv[-1]).read(), env)
+        ret = eval_form(Reader(argv[-1], '<string>').read(), env)
     except ReadError as e:
         print 'Read Error:', e
     except EvalError as e:
         print 'Eval Error:', e
+        print e.form
+        print e.form.start_row, e.form.start_col, e.form.end_row, e.form.end_col
     else:
         print ret

@@ -1,5 +1,5 @@
 import parable
-from parable import Symbol, Function
+from parable import Symbol, Function, List, Integer, String
 from read import Reader
 
 import unittest
@@ -22,14 +22,65 @@ class SymbolTest(unittest.TestCase):
         self.assertEqual(d[Symbol('foo')], 2000)
         self.assertEqual(d[Symbol('bar')], 3000)
 
+class ListTest(unittest.TestCase):
+    def setUp(self):
+        self.list = List([1, 2, 3, 4, 5])
+
+    def test_equality(self):
+        self.assertEqual(self.list, [1, 2, 3, 4, 5])
+
+    def test_get_item(self):
+        self.assertEqual(self.list[0], 1)
+        self.assertEqual(self.list[4], 5)
+        self.assertEqual(self.list[-1], 5)
+
+        with self.assertRaises(IndexError):
+            self.list[5]
+
+    def test_set_item(self):
+        self.list[0] = 10
+        self.assertEqual(self.list[0], 10)
+
+        self.list[-1] = 50
+        self.assertEqual(self.list[-1], 50)
+
+    def test_get_slice(self):
+        self.assertEqual(self.list[1:3], [2, 3])
+        self.assertEqual(type(self.list[1:3]), List)
+        self.assertEqual(self.list[1:3:2], [2])
+        self.assertEqual(type(self.list[1:3:2]), List)
+        self.assertEqual(self.list[5:], [])
+        self.assertEqual(type(self.list[5:]), List)
+
+class IntegerTest(unittest.TestCase):
+    def test_equality(self):
+        self.assertEqual(Integer(1), Integer(1))
+        self.assertEqual(Integer(1), 1)
+        self.assertEqual(Integer(-1), -1)
+
+    def test_addition(self):
+        self.assertEqual(Integer(1) + 1, Integer(2))
+        self.assertEqual(1 + Integer(1), Integer(2))
+        self.assertEqual(Integer(1) + Integer(1), Integer(2))
+
+class StringTest(unittest.TestCase):
+    def test_equality(self):
+        self.assertEqual(String('foo'), String('foo'))
+        self.assertEqual(String('foo'), 'foo')
+        self.assertEqual(String(), '')
+
+    def test_addition(self):
+        self.assertEqual(String('foo') + 'bar', String('foobar'))
+        self.assertTrue(isinstance(String('foo') + 'bar', String))
+        self.assertEqual('foo' + String('bar'), String('foobar'))
+        self.assertTrue(isinstance('foo' + String('bar'), String))
+        self.assertEqual(String('foo') + String('bar'), String('foobar'))
+        self.assertTrue(isinstance(String('foo') + String('bar'), String))
+
 def read_str(s):
-    return Reader(s).read()
+    return Reader(s, '<string>').read()
 
-def eval_str(s, env={}):
-    exp = read_str(s)
-    return parable.eval(exp, env)
-
-class ParableCoreTest(unittest.TestCase):
+class ReaderTest(unittest.TestCase):
     def test_empty(self):
         exp = ''
         result = read_str(exp)
@@ -48,7 +99,7 @@ class ParableCoreTest(unittest.TestCase):
         result = read_str(exp)
         self.assertEqual(result, Symbol('x'))
 
-        exp = '(\na\tb c\nd\re  \n)'
+        exp = '(\na\tb c\nd e  \n)'
         result = read_str(exp)
         self.assertEqual(result, [Symbol('a'), Symbol('b'), Symbol('c'), Symbol('d'), Symbol('e')])
 
@@ -92,6 +143,88 @@ class ParableCoreTest(unittest.TestCase):
         result = read_str(exp)
         self.assertEqual(result, [[Symbol('quote'), Symbol('x')], [Symbol('quote'), Symbol('y')]])
 
+    def test_integer(self):
+        exp = '1080'
+        result = read_str(exp)
+        self.assertEqual(result, 1080)
+
+    def test_string(self):
+        exp = '"foobar"'
+        result = read_str(exp)
+        self.assertEqual(result, 'foobar')
+
+    def test_nil(self):
+        exp = "()"
+        result = read_str(exp)
+        self.assertEqual(result, [])
+
+    def test_list(self):
+        exp = "(1 2 x)"
+        result = read_str(exp)
+        self.assertEqual(result, [1, 2, Symbol('x')])
+
+        exp = "(eq 'x 'x)"
+        result = read_str(exp)
+        self.assertEqual(result, [Symbol('eq'),
+                                  [Symbol('quote'), Symbol('x')],
+                                  [Symbol('quote'), Symbol('x')]])
+
+    def test_nested_list(self):
+        exp = "(1 (2 foo) x)"
+        result = read_str(exp)
+        self.assertEqual(result, [1, [2, Symbol('foo')], Symbol('x')])
+
+        exp = "(eq (a b) (a b))"
+        result = read_str(exp)
+        self.assertEqual(result, [Symbol('eq'),
+                                  [Symbol('a'), Symbol('b')],
+                                  [Symbol('a'), Symbol('b')]])
+
+    def test_multi(self):
+        exp = '"foo"(1 2 x)1(a b)'
+        reader = Reader(exp, '<string>')
+
+        result = reader.read()
+        self.assertEqual(result, 'foo')
+
+        result = reader.read()
+        self.assertEqual(result, [1, 2, Symbol('x')])
+
+        result = reader.read()
+        self.assertEqual(result, 1)
+
+        result = reader.read()
+        self.assertEqual(result, [Symbol('a'), Symbol('b')])
+
+    def test_position(self):
+        exp = '(100 foo "bar")'
+        result = read_str(exp)
+
+        self.assertEqual(result.start_row, 0)
+        self.assertEqual(result.start_col, 0)
+        self.assertEqual(result.end_row, 0)
+        self.assertEqual(result.end_col, 14)
+
+        self.assertEqual(result[0].start_row, 0)
+        self.assertEqual(result[0].start_col, 1)
+        self.assertEqual(result[0].end_row, 0)
+        self.assertEqual(result[0].end_col, 3)
+
+        self.assertEqual(result[1].start_row, 0)
+        self.assertEqual(result[1].start_col, 5)
+        self.assertEqual(result[1].end_row, 0)
+        self.assertEqual(result[1].end_col, 7)
+
+        self.assertEqual(result[2].start_row, 0)
+        self.assertEqual(result[2].start_col, 9)
+        self.assertEqual(result[2].end_row, 0)
+        self.assertEqual(result[2].end_col, 13)
+
+def eval_str(s, env={}):
+    exp = read_str(s)
+    return parable.eval(exp, env)
+
+class ParableCoreTest(unittest.TestCase):
     def test_integer(self):
         exp = '1080'
         result = eval_str(exp)

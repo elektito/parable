@@ -1,4 +1,4 @@
-from parable import Symbol
+from parable import Symbol, List, Integer, String
 from cStringIO import StringIO
 
 class ReadError(RuntimeError):
@@ -8,115 +8,169 @@ class EofReadError(ReadError):
     pass
 
 class Reader(object):
-    def __init__(self, file):
+    def __init__(self, file, filename):
         self.file = file
+        self.filename = filename
         if isinstance(file, (str, unicode)):
             self.file = StringIO(file)
+
         self.row = 0
         self.col = 0
 
-    def __read_char(self):
-        b = self.file.read(1)
-        if b == '':
+        self.__lines = self.file.readlines()
+
+        while self.row < len(self.__lines) and self.__lines[self.row] == '':
+            self.row += 1
+
+    def current(self):
+        if self.row >= len(self.__lines) or \
+           self.col >= len(self.__lines[self.row]):
             return ''
 
+        return self.__lines[self.row][self.col]
+
+    def next(self):
+        if self.row >= len(self.__lines):
+            return
+
         self.col += 1
-        if b == '\n':
+        if self.col >= len(self.__lines[self.row]):
+            self.col = 0
             self.row += 1
-        if b == '\r':
-            self.row += 1
-            b = self.file.read(1)
-            if b == '':
-                return '\n'
-            if b == '\n':
-                return '\n'
-            self.file.seek(-1, 1)
-            return '\n'
+            while self.row < len(self.__lines) and self.__lines[self.row] == '':
+                self.row += 1
 
-        return b
+    def go_back(self):
+        if self.row == 0 and self.col == 0:
+            return
 
-    def __go_back(self):
-        self.file.seek(-1, 1)
+        self.col -= 1
+        if self.col < 0:
+            self.row -= 1
+            if self.row < 0:
+                self.row = 0
+                return
+            self.col = len(self.__lines[self.row]) - 1
 
     def skip_whitespace(self):
-        b = self.__read_char()
+        b = self.current()
         while b:
             if b not in '; \t\r\n':
-                self.__go_back()
                 break
 
             if b == ';':
                 while b and b != '\n':
-                    b = self.__read_char()
+                    self.next()
+                    b = self.current()
+                self.go_back()
 
-            b = self.__read_char()
+            self.next()
+            b = self.current()
+
+    def mark(self):
+        self.__start_row = self.row
+        self.__start_col = self.col
+
+    def add_metadata(self, value):
+        value.start_row = self.__start_row
+        value.start_col = self.__start_col
+        value.end_row = self.row
+        value.end_col = self.col
+        value.filename = self.filename
 
     def read_atom(self):
         self.skip_whitespace()
 
         atom = ''
-        b = self.__read_char()
+        b = self.current()
         if b == "'":
-            return [Symbol('quote'), self.read()]
+            quote = Symbol('quote')
+            self.mark()
+            self.add_metadata(quote)
+
+            self.mark()
+            self.next()
+            value = self.read()
+            form = List([quote, value])
+            self.add_metadata(form)
+            return form
+
+        self.mark()
 
         # is it a string literal?
         if b == '"':
-            b = self.__read_char()
+            self.mark()
+            self.next()
+            b = self.current()
             while b and b != '"':
                 atom += b
-                b = self.__read_char()
+                self.next()
+                b = self.current()
             if not b:
                 raise ReadError('Unexpected end of file inside string literal.')
-            return atom
+            string = String(atom)
+            self.add_metadata(string)
+            self.next()
+            return string
 
         while b and b not in '() \'\n\t\r;':
             atom += b
-            b = self.__read_char()
+            self.next()
+            b = self.current()
 
         if b:
-            self.__go_back()
+            self.go_back()
 
         try:
             # is this an integer?
             integer = int(atom)
+            integer = Integer(integer)
 
             # yes, it is.
+            self.add_metadata(integer)
+            self.next()
             return integer
-        except:
+        except ValueError:
             pass # not an integer
 
-        return Symbol(atom)
+        sym = Symbol(atom)
+        self.add_metadata(sym)
+        self.next()
+        return sym
 
     def read_list(self):
-        b = self.__read_char()
+        b = self.current()
         if not b or b != '(':
             raise ReadError('Expected "(".')
 
-        items = []
+        items = List()
+        items.filename = self.filename
+        items.start_row = self.row
+        items.start_col = self.col
 
+        self.next()
         while True:
             self.skip_whitespace()
-            b = self.__read_char()
+            b = self.current()
 
             if not b:
                 raise EofReadError('Unexpected end of file.')
 
             if b == ')':
+                items.end_row = self.row
+                items.end_col = self.col
+                self.next()
                 return items
 
-            self.__go_back()
-            if b == '(':
-                items.append(self.read_list())
-            else:
-                items.append(self.read_atom())
+            items.append(self.read())
+            #self.next()
 
     def read(self):
         self.skip_whitespace()
-        b = self.__read_char()
+        b = self.current()
         if not b:
             return None
 
-        self.__go_back()
         if b == '(':
             return self.read_list()
         else:

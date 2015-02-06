@@ -1,7 +1,9 @@
 from cStringIO import StringIO
 
 class EvalError(RuntimeError):
-    pass
+    def __init__(self, msg, form):
+        self.form = form
+        super(EvalError, self).__init__(msg)
 
 class Symbol(object):
     def __init__(self, name):
@@ -21,12 +23,13 @@ class Symbol(object):
 
 class Function(object):
     def __init__(self, params, body, env):
-        if type(params) != list:
-            raise EvalError('Invalid argument list; not a list.')
+        if type(params) != List:
+            raise EvalError('Invalid argument list; not a list.', params)
 
         if any(type(i) != Symbol for i in params):
             raise EvalError(
-                'Function parameter list should only contain symbols.')
+                'Function parameter list should only contain symbols.',
+                params)
 
         self.params = params
         self.body = body
@@ -34,14 +37,17 @@ class Function(object):
 
     def call(self, args):
         params = self.params
+        args = List(args)
 
         if len(params) >= 2 and params[-2] == Symbol('&rest'):
             if len(args) < len(params) - 2:
                 raise EvalError('Expected at least {} argument(s) but got {}.'
-                                .format(len(params) - 2, len(args)))
+                                .format(len(params) - 2, len(args)),
+                                args)
         elif len(args) != len(params):
             raise EvalError('Expected {} argument(s) but got {}.'
-                            .format(len(params), len(args)))
+                            .format(len(params), len(args)),
+                            args)
 
         if len(params) >= 2 and params[-2] == Symbol('&rest'):
             args = args[:len(params) - 2] + [args[len(params) - 2:]]
@@ -54,8 +60,8 @@ class Function(object):
 
 class Macro(object):
     def __init__(self, params, body, env):
-        if type(params) != list:
-            raise EvalError('Invalid argument list; not a list.')
+        if type(params) != List:
+            raise EvalError('Invalid argument list; not a list.', params)
 
         self.params = params
         self.body = body
@@ -68,38 +74,107 @@ class Macro(object):
     def __repr__(self):
         return '<Macro params={} body={}>'.format(self.params, self.body)
 
+class List(list):
+    def __init__(self, *args, **kwargs):
+        super(List, self).__init__(*args, **kwargs)
+        self.start_row = 0
+        self.start_col = 0
+        self.end_row = 0
+        self.end_col = 0
+        self.filename = ''
+
+    def __getitem__(self, key):
+        if isinstance(key, slice):
+            l = super(List, self).__getitem__(key)
+            return List(l)
+        else:
+            return super(List, self).__getitem__(key)
+
+    def __setitem__(self, key, value):
+        super(List, self).__setitem__(key, value)
+
+    def __getslice__(self, i, j):
+        return self.__getitem__(slice(i, j))
+
+    def __add__(self, other):
+        return List(super(List, self).__add__(other))
+
+    def __radd__(self, other):
+        if not isinstance(other, List):
+            other = List(other)
+        return List(super(List, other).__add__(self))
+
+    def __repr__(self):
+        return 'L{}'.format(super(List, self).__repr__())
+
+class Integer(int):
+    def __new__(cls, *args, **kwargs):
+        return super(Integer, cls).__new__(cls, *args, **kwargs)
+
+    def __init__(self, n):
+        self.start_row = 0
+        self.start_col = 0
+        self.end_row = 0
+        self.end_col = 0
+        self.filename = ''
+
+    def __repr__(self):
+        return 'N{}'.format(super(Integer, self).__repr__())
+
+class String(str):
+    def __new__(cls, *args, **kwargs):
+        obj = super(String, cls).__new__(cls, *args, **kwargs)
+        obj.start_row = 0
+        obj.start_col = 0
+        obj.end_row = 0
+        obj.end_col = 0
+        obj.filename = ''
+        return obj
+
+    def __add__(self, other):
+        return String(str(self) + str(other))
+
+    def __radd__(self, other):
+        return String(str(other) + str(self))
+
+    def __repr__(self):
+        return 'S{}'.format(super(String, self).__repr__())
+
 def destructure(params, args):
-    if type(params) == list and type(args) != list:
+    if type(params) == List and type(args) != List:
         raise EvalError('Parameter list and the provided arguments do not match.\n'
                         '    Expected a list in the arguments, got: {}'
-                        .format(args))
+                        .format(args),
+                        args)
 
     if len(params) >= 2 and params[-2] == Symbol('&rest'):
         if len(args) < len(params) - 2:
             raise EvalError('Parameter list and the provided arguments do not match.\n'
                             '    Expected at least {} argument(s) but got {}.'
-                            .format(len(params) - 2, len(args)))
+                            .format(len(params) - 2, len(args)),
+                            args)
 
         args = args[:len(params) - 2] + [args[len(params) - 2:]]
         params = params[:-2] + params[-1:]
     elif len(params) != len(args):
         raise EvalError('Parameter list and the provided arguments do not match.\n'
                         '    Expected {} argument(s) but got {}.'
-                        .format(len(params), len(args)))
+                        .format(len(params), len(args)),
+                        args)
 
     env = {}
     for p, a in zip(params, args):
         if type(p) == Symbol:
             env[p] = a
-        elif type(p) == list:
+        elif type(p) == List:
             env.update(destructure(p, a))
         else:
-            raise EvalError('Only symbols and lists allowed in parameter list; got a', type(p))
+            raise EvalError('Only symbols and lists allowed in parameter list; got a {}.'.format(type(p)), p)
 
     return env
 
 def macro_expand_1(exp, env):
-    if type(exp) != list or len(exp) == 0:
+    if type(exp) != List or len(exp) == 0:
         return exp, False
 
     try:
@@ -128,7 +203,7 @@ def macro_expand(exp, env):
 def eval_if(sexp, env):
     assert sexp[0].name == 'if'
     if len(sexp) != 4:
-        raise EvalError('`if` form accepts exactly 3 arguments; {} given.'.format(len(sexp) - 1))
+        raise EvalError('`if` form accepts exactly 3 arguments; {} given.'.format(len(sexp) - 1), sexp)
 
     cond = eval(sexp[1], env)
     if cond == []:
@@ -139,102 +214,104 @@ def eval_if(sexp, env):
 def eval_quote(sexp, env):
     assert sexp[0].name == 'quote'
     if len(sexp) != 2:
-        raise EvalError('`if` form accepts exactly 1 argument; {} given.'.format(len(sexp) - 1))
+        raise EvalError('`if` form accepts exactly 1 argument; {} given.'.format(len(sexp) - 1), sexp)
     return sexp[1]
 
 def eval_typeof(sexp, env):
     assert sexp[0].name == 'typeof'
     if len(sexp) != 2:
-        raise EvalError('`typeof` form accepts exactly 1 argument; {} given.'.format(len(sexp) - 1))
+        raise EvalError('`typeof` form accepts exactly 1 argument; {} given.'.format(len(sexp) - 1), sexp)
 
     val = eval(sexp[1], env)
-    val_type = {list: Symbol('list'),
+    val_type = {List: Symbol('list'),
                 Symbol: Symbol('symbol'),
                 Function: Symbol('function'),
                 Macro: Symbol('macro'),
-                int: Symbol('int'),
-                str: Symbol('str')}.get(type(val), None)
+                Integer: Symbol('int'),
+                String: Symbol('str')}.get(type(val), None)
     assert val_type != None
     return val_type
 
 def eval_first(sexp, env):
     assert sexp[0].name == 'first'
     if len(sexp) != 2:
-        raise EvalError('`first` form accepts exactly 1 argument; {} given.'.format(len(sexp) - 1))
+        raise EvalError('`first` form accepts exactly 1 argument; {} given.'.format(len(sexp) - 1), sexp)
     ret = eval(sexp[1], env)
-    if type(ret) != list:
-        raise EvalError('`first` argument must be a list.')
+    if type(ret) != List:
+        raise EvalError('`first` argument must be a list.', sexp[1])
+    if ret == []:
+        raise EvalError('`first` argument cannot be an empty list.', sexp[1])
     return ret[0]
 
 def eval_rest(sexp, env):
     assert sexp[0].name == 'rest'
     if len(sexp) != 2:
-        raise EvalError('`rest` form accepts exactly 1 argument; {} given.'.format(len(sexp) - 1))
+        raise EvalError('`rest` form accepts exactly 1 argument; {} given.'.format(len(sexp) - 1), sexp)
     ret = eval(sexp[1], env)
-    if type(ret) != list:
-        raise EvalError('`rest` argument must be a list.')
+    if type(ret) != List:
+        raise EvalError('`rest` argument must be a list.', sexp)
     return ret[1:]
 
 def eval_prep(sexp, env):
     assert sexp[0].name == 'prep'
     if len(sexp) != 3:
-        raise EvalError('`prep` form accepts exactly 2 argument; {} given.'.format(len(sexp) - 1))
+        raise EvalError('`prep` form accepts exactly 2 argument; {} given.'.format(len(sexp) - 1), sexp)
     first = eval(sexp[1], env)
     rest = eval(sexp[2], env)
-    if type(rest) != list:
-        raise EvalError('`prep` second argument must be a list.')
+    if type(rest) != List:
+        raise EvalError('`prep` second argument must be a list.', sexp)
     return [first] + rest
 
 def eval_eq(sexp, env):
     assert sexp[0].name == 'eq'
     if len(sexp) != 3:
-        raise EvalError('`first` form accepts exactly 2 argument; {} given.'.format(len(sexp) - 1))
+        raise EvalError('`first` form accepts exactly 2 argument; {} given.'.format(len(sexp) - 1), sexp)
     first = eval(sexp[1], env)
     second = eval(sexp[2], env)
-    if type(first) != list and type(second) != list:
-        return Symbol('t') if first == second else []
+    if type(first) != List and type(second) != List:
+        return Symbol('t') if first == second else List()
     elif first == second == []:
         return Symbol('t')
     else:
-        return []
+        return List()
 
 def eval_apply(sexp, env):
     assert sexp[0].name == 'apply'
     if len(sexp) != 3:
-        raise EvalError('`apply` expects 2 arguments; {} given.'.format(len(sexp) - 1))
+        raise EvalError('`apply` expects 2 arguments; {} given.'.format(len(sexp) - 1), sexp)
 
     func = sexp[1]
     args = eval(sexp[2], env)
     return eval([func] + args, env)
 
 def eval(exp, env):
-    if type(exp) == list:
+    if type(exp) == List:
         return eval_sexp(exp, env)
-    elif type(exp) == int:
+    elif type(exp) == Integer:
         return exp
-    elif type(exp) == str:
+    elif type(exp) == String:
         return exp
     elif exp == Symbol('nil'):
-        return []
+        return List()
 
     if exp not in env:
-        raise EvalError('Undefined variable: {}'.format(exp.name))
+        raise EvalError('Undefined variable: {}'.format(exp.name), exp)
 
     return env[exp]
 
 def eval_sexp(sexp, env):
     if sexp == []:
-        return []
+        return List()
 
     first = sexp[0]
 
     if first == Symbol('fn'):
         if len(sexp) != 3:
-            raise EvalError('Invalid fn expression.')
+            raise EvalError('Invalid fn expression.', exp)
         return Function(sexp[1], sexp[2], env)
     if first == Symbol('mac'):
         if len(sexp) != 3:
-            raise EvalError('Invalid mac expression.')
+            raise EvalError('Invalid mac expression.', exp)
         return Macro(sexp[1], sexp[2], env)
 
     map = {Symbol('if'): eval_if,
@@ -253,7 +330,7 @@ def eval_sexp(sexp, env):
 
     first = eval(sexp[0], env)
     if not isinstance(first, (Function, Macro)):
-        raise EvalError('Not a function or a macro: {}'.format(first))
+        raise EvalError('Not a function or a macro: {}'.format(first), first)
 
     args = sexp[1:]
 
@@ -270,4 +347,5 @@ def eval_sexp(sexp, env):
         return eval(expanded, env)
     else:
         raise EvalError('Expected a macro or a function, got: {}'
-                        .format(first))
+                        .format(first),
+                        first)
