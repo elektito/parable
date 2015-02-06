@@ -96,3 +96,18 @@
   (if (eq (typeof value) 'list)
       '()
       't))
+
+(defun first (lst)
+  (first lst))
+
+(defun rest (lst)
+  (rest lst))
+
+(defun typeof (value)
+  (typeof value))
+
+(defun eq (value1 value2)
+  (eq value1 value2))
+
+(defun prep (val lst)
+  (prep val lst))
