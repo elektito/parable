@@ -10,9 +10,7 @@ class LoadError(RuntimeError):
         super(LoadError, self).__init__(msg)
         self.form = form
 
-def load(f):
-    env = {}
-
+def load(f, env):
     while True:
         form = read(f)
 
@@ -27,7 +25,7 @@ def load(f):
         if type(expanded[1]) != Symbol:
             raise LoadError('Invalid top-level form.', form)
 
-        env[expanded[1]] = expanded[2]
+        env[expanded[1]] = eval_form(expanded[2], env)
 
     return env
 
@@ -45,14 +43,14 @@ if __name__ == '__main__':
     for filename in files:
         with open(filename) as f:
             try:
-                env.update(load(f))
+                env.update(load(f, env))
             except LoadWarning as w:
-                print 'Warning:', w
+                print 'Warning in file {}:'.format(filename), w
                 if w.form != None:
                     print '   form:', w.form
                 exit(11)
             except LoadError as e:
-                print 'Error:', e
+                print 'Error in file {}:'.format(filename), e
                 if e.form != None:
                     print '   form:', e.form
                 exit(11)
