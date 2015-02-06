@@ -91,3 +91,8 @@
 
 (defmac when (condition body)
   (list 'if condition body '()))
+
+(defun atom (value)
+  (if (eq (typeof value) 'list)
+      '()
+      't))
