@@ -114,3 +114,12 @@
 
 (defun apply (func args)
   (apply func args))
+
+(defun map1 (func args_list)
+  (if (any (mapf null args_list))
+      '()
+      (prep (apply func (firsts args_list))
+            (map1 func (rests args_list)))))
+
+(defun map (func &rest args_list)
+  (map1 func args_list))
