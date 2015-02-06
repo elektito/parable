@@ -116,16 +116,18 @@ def eval_quote(sexp, env):
         raise EvalError('`if` form accepts exactly 1 argument; {} given.'.format(len(sexp) - 1))
     return sexp[1]
 
-def eval_atom(sexp, env):
-    assert sexp[0].name == 'atom'
+def eval_typeof(sexp, env):
+    assert sexp[0].name == 'typeof'
     if len(sexp) != 2:
-        raise EvalError('`atom` form accepts exactly 1 argument; {} given.'.format(len(sexp) - 1))
+        raise EvalError('`typeof` form accepts exactly 1 argument; {} given.'.format(len(sexp) - 1))
 
     val = eval(sexp[1], env)
-    if type(val) == list:
-        return []
-    else:
-        return Symbol('t')
+    val_type = {list: Symbol('list'),
+                Symbol: Symbol('symbol'),
+                int: Symbol('int'),
+                str: Symbol('str')}.get(type(val), None)
+    assert val_type != None
+    return val_type
 
 def eval_first(sexp, env):
     assert sexp[0].name == 'first'
@@ -195,7 +197,7 @@ def eval_sexp(sexp, env):
     map = {Symbol('if'): eval_if,
            Symbol('quote'): eval_quote,
            Symbol('prep'): eval_prep,
-           Symbol('atom'): eval_atom,
+           Symbol('typeof'): eval_typeof,
            Symbol('first'): eval_first,
            Symbol('rest'): eval_rest,
            Symbol('eq'): eval_eq}

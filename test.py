@@ -117,22 +117,22 @@ class ParableCoreTest(unittest.TestCase):
         result = eval_str(exp)
         self.assertEqual(result, Symbol('x'))
 
-    def test_atom(self):
-        exp = "(atom 'x)"
+    def test_typeof(self):
+        exp = "(typeof 'x)"
         result = eval_str(exp)
-        self.assertEqual(result, Symbol('t'))
+        self.assertEqual(result, Symbol('symbol'))
 
-        exp = "(atom 10)"
+        exp = "(typeof 10)"
         result = eval_str(exp)
-        self.assertEqual(result, Symbol('t'))
+        self.assertEqual(result, Symbol('int'))
 
-        exp = '(atom "foo")'
+        exp = '(typeof "foo")'
         result = eval_str(exp)
-        self.assertEqual(result, Symbol('t'))
+        self.assertEqual(result, Symbol('str'))
 
-        exp = "(atom '(x y))"
+        exp = "(typeof '(x y))"
         result = eval_str(exp)
-        self.assertEqual(result, [])
+        self.assertEqual(result, Symbol('list'))
 
     def test_first(self):
         exp = "(first '(x y z))"
