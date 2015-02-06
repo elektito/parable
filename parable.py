@@ -154,6 +154,8 @@ def eval_typeof(sexp, env):
     val = eval(sexp[1], env)
     val_type = {list: Symbol('list'),
                 Symbol: Symbol('symbol'),
+                Function: Symbol('function'),
+                Macro: Symbol('macro'),
                 int: Symbol('int'),
                 str: Symbol('str')}.get(type(val), None)
     assert val_type != None

@@ -134,6 +134,14 @@ class ParableCoreTest(unittest.TestCase):
         result = eval_str(exp)
         self.assertEqual(result, Symbol('list'))
 
+        exp = "(typeof (fn (x) 100))"
+        result = eval_str(exp)
+        self.assertEqual(result, Symbol('function'))
+
+        exp = "(typeof (mac (x) x))"
+        result = eval_str(exp)
+        self.assertEqual(result, Symbol('macro'))
+
     def test_first(self):
         exp = "(first '(x y z))"
         result = eval_str(exp)
