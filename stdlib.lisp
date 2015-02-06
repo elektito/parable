@@ -111,3 +111,6 @@
 
 (defun prep (val lst)
   (prep val lst))
+
+(defun apply (func args)
+  (apply func args))
