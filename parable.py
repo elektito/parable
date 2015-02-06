@@ -25,6 +25,53 @@ class Symbol(object):
     def __repr__(self):
         return '<Symbol "{}">'.format(self.name)
 
+class Function(object):
+    def __init__(self, params, body):
+        if type(params) != list:
+            raise EvalError('Invalid argument list; not a list.')
+
+        if any(type(i) != Symbol for i in params):
+            raise EvalError(
+                'Function parameter list should only contain symbols.')
+
+        self.params = params
+        self.body = body
+
+    def call(self, args, env):
+        params = self.params
+
+        if len(params) >= 2 and params[-2] == Symbol('&rest'):
+            if len(args) < len(params) - 2:
+                raise EvalError('Expected at least {} argument(s) but got {}.'
+                                .format(len(params) - 2, len(args)))
+        elif len(args) != len(params):
+            raise EvalError('Expected {} argument(s) but got {}.'
+                            .format(len(params), len(args)))
+
+        if len(params) >= 2 and params[-2] == Symbol('&rest'):
+            args = args[:len(params) - 2] + [args[len(params) - 2:]]
+            params = params[:-2] + params[-1:]
+
+        return eval(self.body, dict(env, **dict(zip(params, args))))
+
+    def __repr__(self):
+        return '<Function params={} body={}>'.format(self.params, self.body)
+
+class Macro(object):
+    def __init__(self, params, body):
+        if type(params) != list:
+            raise EvalError('Invalid argument list; not a list.')
+
+        self.params = params
+        self.body = body
+
+    def expand(self, args, env):
+        extra_env = destructure(self.params, args)
+        return eval(self.body, dict(env, **extra_env))
+
+    def __repr__(self):
+        return '<Macro params={} body={}>'.format(self.params, self.body)
+
 def destructure(params, args):
     if type(params) == list and type(args) != list:
         raise EvalError('Parameter list and the provided arguments do not match.\n'
@@ -60,32 +107,15 @@ def macro_expand_1(exp, env):
         return exp, False
 
     try:
-        first = eval(exp[0], env)
+        macro = eval(exp[0], env)
     except EvalError:
         return exp, False
 
-    if type(first) != list:
-        return exp, False
-    if len(first) < 2 or first[0] != Symbol('mac'):
+    if not isinstance(macro, Macro):
         return exp, False
 
-    if type(first[1]) != list:
-        raise EvalError('Invalid argument list; not a list.')
-
-    params = first[1]
-    body = first[2]
     args = exp[1:]
-
-    if len(params) >= 2 and params[-2] == Symbol('&rest'):
-        if len(args) < len(params) - 2:
-            raise EvalError('Expected at least {} argument(s) but got {}.'
-                            .format(len(params) - 2, len(args)))
-    elif len(args) != len(params):
-        raise EvalError('Expected {} argument(s) but got {}.'
-                        .format(len(params), len(args)))
-
-    extra_env = destructure(params, args)
-    expanded = eval(body, dict(env, **extra_env))
+    expanded = macro.expand(args, env)
 
     return expanded, True
 
@@ -198,10 +228,14 @@ def eval_sexp(sexp, env):
 
     first = sexp[0]
 
-    if first in (Symbol('fn'), Symbol('mac')):
+    if first == Symbol('fn'):
         if len(sexp) != 3:
-            raise EvalError('Invalid fn/mac expression.')
-        return sexp
+            raise EvalError('Invalid fn expression.')
+        return Function(sexp[1], sexp[2])
+    if first == Symbol('mac'):
+        if len(sexp) != 3:
+            raise EvalError('Invalid mac expression.')
+        return Macro(sexp[1], sexp[2])
 
     map = {Symbol('if'): eval_if,
            Symbol('quote'): eval_quote,
@@ -218,42 +252,19 @@ def eval_sexp(sexp, env):
     # it must be a function or macro call then.
 
     first = eval(sexp[0], env)
-    if type(first) != list:
+    if not isinstance(first, (Function, Macro)):
         raise EvalError('Not a function or a macro: {}'.format(first))
-    if type(first[1]) != list:
-        raise EvalError('Invalid argument list; not a list.')
 
-    params = first[1]
-    body = first[2]
     args = sexp[1:]
 
-    if len(params) >= 2 and params[-2] == Symbol('&rest'):
-        if len(args) < len(params) - 2:
-            raise EvalError('Expected at least {} argument(s) but got {}.'
-                            .format(len(params) - 2, len(args)))
-    elif len(args) != len(params):
-        raise EvalError('Expected {} argument(s) but got {}.'
-                        .format(len(params), len(args)))
-
-    if first[0] == Symbol('fn'):
-        if any(type(i) != Symbol for i in params):
-            raise EvalError(
-                'Function parameter list should only contain symbols.')
-
+    if isinstance(first, Function):
         # evaluate arguments.
         args = [eval(i, env) for i in args]
 
-        if len(params) >= 2 and params[-2] == Symbol('&rest'):
-            args = args[:len(params) - 2] + [args[len(params) - 2:]]
-            params = params[:-2] + params[-1:]
-
-        return eval(body, dict(env, **dict(zip(params, args))))
-    elif first[0] == Symbol('mac'):
-        # macro arguments can be destructuring.
-        extra_env = destructure(params, args)
-
+        return first.call(args, env)
+    elif isinstance(first, Macro):
         # now expand the macro.
-        expanded = eval(body, dict(env, **extra_env))
+        expanded = first.expand(args, env)
 
         # evaluate the result of expansion.
         return eval(expanded, env)
