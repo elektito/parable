@@ -25,12 +25,13 @@ class Reader(object):
             self.row += 1
         if b == '\r':
             self.row += 1
-            b = self.read(1)
+            b = self.file.read(1)
             if b == '':
                 return '\n'
             if b == '\n':
                 return '\n'
             self.file.seek(-1, 1)
+            return '\n'
 
         return b
 
