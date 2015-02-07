@@ -20,7 +20,7 @@ class Symbol(object):
         return '<Symbol "{}">'.format(self.name)
 
 class Function(object):
-    def __init__(self, params, body):
+    def __init__(self, params, body, env):
         if type(params) != list:
             raise EvalError('Invalid argument list; not a list.')
 
@@ -30,8 +30,9 @@ class Function(object):
 
         self.params = params
         self.body = body
+        self.env = env
 
-    def call(self, args, env):
+    def call(self, args):
         params = self.params
 
         if len(params) >= 2 and params[-2] == Symbol('&rest'):
@@ -46,22 +47,23 @@ class Function(object):
             args = args[:len(params) - 2] + [args[len(params) - 2:]]
             params = params[:-2] + params[-1:]
 
-        return eval(self.body, dict(env, **dict(zip(params, args))))
+        return eval(self.body, dict(self.env, **dict(zip(params, args))))
 
     def __repr__(self):
         return '<Function params={} body={}>'.format(self.params, self.body)
 
 class Macro(object):
-    def __init__(self, params, body):
+    def __init__(self, params, body, env):
         if type(params) != list:
             raise EvalError('Invalid argument list; not a list.')
 
         self.params = params
         self.body = body
+        self.env = env
 
-    def expand(self, args, env):
+    def expand(self, args):
         extra_env = destructure(self.params, args)
-        return eval(self.body, dict(env, **extra_env))
+        return eval(self.body, dict(self.env, **extra_env))
 
     def __repr__(self):
         return '<Macro params={} body={}>'.format(self.params, self.body)
@@ -109,7 +111,7 @@ def macro_expand_1(exp, env):
         return exp, False
 
     args = exp[1:]
-    expanded = macro.expand(args, env)
+    expanded = macro.expand(args)
 
     return expanded, True
 
@@ -227,11 +229,11 @@ def eval_sexp(sexp, env):
     if first == Symbol('fn'):
         if len(sexp) != 3:
             raise EvalError('Invalid fn expression.')
-        return Function(sexp[1], sexp[2])
+        return Function(sexp[1], sexp[2], env)
     if first == Symbol('mac'):
         if len(sexp) != 3:
             raise EvalError('Invalid mac expression.')
-        return Macro(sexp[1], sexp[2])
+        return Macro(sexp[1], sexp[2], env)
 
     map = {Symbol('if'): eval_if,
            Symbol('quote'): eval_quote,
@@ -257,10 +259,10 @@ def eval_sexp(sexp, env):
         # evaluate arguments.
         args = [eval(i, env) for i in args]
 
-        return first.call(args, env)
+        return first.call(args)
     elif isinstance(first, Macro):
         # now expand the macro.
-        expanded = first.expand(args, env)
+        expanded = first.expand(args)
 
         # evaluate the result of expansion.
         return eval(expanded, env)

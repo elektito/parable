@@ -1,5 +1,5 @@
 import parable
-from parable import Symbol
+from parable import Symbol, Function
 from read import Reader
 
 import unittest
@@ -248,6 +248,19 @@ class ParableCoreTest(unittest.TestCase):
         exp = "((mac (a (b (c)) d) (prep a (prep b (prep c (prep d '()))))) if ('t ('a)) 'b)"
         result = eval_str(exp)
         self.assertEqual(result, Symbol('a'))
+
+    def test_lexical_scope(self):
+        # first create a function that returns the value of a symbol x
+        # in its lexical scope, with x = 10.
+        exp = "((fn (x) (fn () x)) 10)"
+        func = eval_str(exp)
+        self.assertTrue(isinstance(func, Function))
+
+        # now call the function in an environment where x is 20 and
+        # make sure it still returns 10.
+        exp = "(foo)"
+        result = eval_str(exp, {Symbol('x'): 20, Symbol('foo'): func})
+        self.assertEqual(result, 10)
 
 class ParableUtilsTest(unittest.TestCase):
     def test_macro_expand_single(self):
