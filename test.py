@@ -1,5 +1,6 @@
 import parable
 from parable import Symbol
+from read import Reader
 
 import unittest
 
@@ -21,67 +22,70 @@ class SymbolTest(unittest.TestCase):
         self.assertEqual(d[Symbol('foo')], 2000)
         self.assertEqual(d[Symbol('bar')], 3000)
 
+def read_str(s):
+    return Reader(s).read()
+
 def eval_str(s, env={}):
-    exp = parable.read_str(s)
+    exp = read_str(s)
     return parable.eval(exp, env)
 
 class ParableCoreTest(unittest.TestCase):
     def test_empty(self):
         exp = ''
-        result = parable.read_str(exp)
+        result = read_str(exp)
         self.assertEqual(result, None)
 
         exp = '\n\n\n\n\t    \n\n'
-        result = parable.read_str(exp)
+        result = read_str(exp)
         self.assertEqual(result, None)
 
     def test_whitespace(self):
         exp = '   x'
-        result = parable.read_str(exp)
+        result = read_str(exp)
         self.assertEqual(result, Symbol('x'))
 
         exp = '\n\nx\n\n\n\n'
-        result = parable.read_str(exp)
+        result = read_str(exp)
         self.assertEqual(result, Symbol('x'))
 
         exp = '(\na\tb c\nd\re  \n)'
-        result = parable.read_str(exp)
+        result = read_str(exp)
         self.assertEqual(result, [Symbol('a'), Symbol('b'), Symbol('c'), Symbol('d'), Symbol('e')])
 
     def test_comments(self):
         exp = "x ;foobar"
-        result = parable.read_str(exp)
+        result = read_str(exp)
         self.assertEqual(result, Symbol('x'))
 
         exp = "(x;comment as a separator\ny)"
-        result = parable.read_str(exp)
+        result = read_str(exp)
         self.assertEqual(result, [Symbol('x'), Symbol('y')])
 
         exp = "x;comment as separator"
-        result = parable.read_str(exp)
+        result = read_str(exp)
         self.assertEqual(result, Symbol('x'))
 
         exp = ";beginning comments\n(x ;foobar\ny); end comments\n"
-        result = parable.read_str(exp)
+        result = read_str(exp)
         self.assertEqual(result, [Symbol('x'), Symbol('y')])
 
     def test_shorthand_quote(self):
         exp = "'x"
-        result = parable.read_str(exp)
+        result = read_str(exp)
         self.assertEqual(result, [Symbol('quote'), Symbol('x')])
 
         exp = "'   x"
-        result = parable.read_str(exp)
+        result = read_str(exp)
         self.assertEqual(result, [Symbol('quote'), Symbol('x')])
 
         exp = "'(x y)"
-        result = parable.read_str(exp)
+        result = read_str(exp)
         self.assertEqual(result, [Symbol('quote'), [Symbol('x'), Symbol('y')]])
 
         # quote character as a separator (no space before the second
         # quote).
         exp = "('x'y)"
-        result = parable.read_str(exp)
+        result = read_str(exp)
         self.assertEqual(result, [[Symbol('quote'), Symbol('x')], [Symbol('quote'), Symbol('y')]])
 
     def test_integer(self):
@@ -244,7 +248,7 @@ class ParableCoreTest(unittest.TestCase):
 class ParableUtilsTest(unittest.TestCase):
     def test_macro_expand_single(self):
         exp = "((mac (a) 'a) 'x))"
-        exp = parable.read_str(exp)
+        exp = read_str(exp)
 
         result, expanded = parable.macro_expand_1(exp, {})
         self.assertTrue(expanded)
@@ -256,7 +260,7 @@ class ParableUtilsTest(unittest.TestCase):
 
     def test_macro_expand_multi(self):
         exp = "((mac (a) '((mac () 1000))) 'x))"
-        exp = parable.read_str(exp)
+        exp = read_str(exp)
 
         result, expanded = parable.macro_expand_1(exp, {})
         self.assertTrue(expanded)
@@ -268,7 +272,7 @@ class ParableUtilsTest(unittest.TestCase):
 
     def test_macro_expand_none(self):
         exp = "x"
-        exp = parable.read_str(exp)
+        exp = read_str(exp)
         result, expanded = parable.macro_expand_1(exp, {})
         self.assertFalse(expanded)
         self.assertEqual(result, Symbol('x'))
@@ -277,7 +281,7 @@ class ParableUtilsTest(unittest.TestCase):
         self.assertEqual(result, Symbol('x'))
 
         exp = "()"
-        exp = parable.read_str(exp)
+        exp = read_str(exp)
         result, expanded = parable.macro_expand_1(exp, {})
         self.assertFalse(expanded)
         self.assertEqual(result, [])
@@ -286,7 +290,7 @@ class ParableUtilsTest(unittest.TestCase):
         self.assertEqual(result, [])
 
         exp = "(car x)"
-        exp = parable.read_str(exp)
+        exp = read_str(exp)
         result, expanded = parable.macro_expand_1(exp, {})
         self.assertFalse(expanded)
         self.assertEqual(result, [Symbol('car'), Symbol('x')])
@@ -295,7 +299,7 @@ class ParableUtilsTest(unittest.TestCase):
         self.assertEqual(result, [Symbol('car'), Symbol('x')])
 
         exp = "1000"
-        exp = parable.read_str(exp)
+        exp = read_str(exp)
         result, expanded = parable.macro_expand_1(exp, {})
         self.assertFalse(expanded)
         self.assertEqual(result, 1000)
