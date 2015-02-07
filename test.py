@@ -69,6 +69,10 @@ class ParableCoreTest(unittest.TestCase):
         result = read_str(exp)
         self.assertEqual(result, [Symbol('x'), Symbol('y')])
 
+        exp = '"x;not-a-comment"'
+        result = read_str(exp)
+        self.assertEqual(result, "x;not-a-comment")
+
     def test_shorthand_quote(self):
         exp = "'x"
         result = read_str(exp)

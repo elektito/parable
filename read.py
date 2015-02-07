@@ -59,6 +59,16 @@ class Reader(object):
         if b == "'":
             return [Symbol('quote'), self.read()]
 
+        # is it a string literal?
+        if b == '"':
+            b = self.__read_char()
+            while b and b != '"':
+                atom += b
+                b = self.__read_char()
+            if not b:
+                raise ReadError('Unexpected end of file inside string literal.')
+            return atom
+
         while b and b not in '() \'\n\t\r;':
             atom += b
             b = self.__read_char()
@@ -74,10 +84,6 @@ class Reader(object):
             return integer
         except:
             pass # not an integer
-
-        # is it a string literal?
-        if len(atom) >= 2 and atom[0] == '"' and atom[-1] == '"':
-            return atom[1:-1]
 
         return Symbol(atom)
 
