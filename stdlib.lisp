@@ -7,6 +7,24 @@
 (define defmac (mac (name args body)
                     (list 'define name (list 'mac args body))))
 
+(defun first (lst)
+  (first lst))
+
+(defun rest (lst)
+  (rest lst))
+
+(defun typeof (value)
+  (typeof value))
+
+(defun eq (value1 value2)
+  (eq value1 value2))
+
+(defun prep (val lst)
+  (prep val lst))
+
+(defun apply (func args)
+  (apply func args))
+
 (defun null (v)
   (if v '() 't))
 
@@ -47,10 +65,10 @@
   (rest (first lst)))
 
 (defun firsts (lists)
-  (mapf (fn (l) (first l)) lists))
+  (mapf first lists))
 
 (defun rests (lists)
-  (mapf (fn (l) (rest l)) lists))
+  (mapf rest lists))
 
 (defun any (values)
   (if (null values)
@@ -96,24 +114,6 @@
   (if (eq (typeof value) 'list)
       '()
       't))
-
-(defun first (lst)
-  (first lst))
-
-(defun rest (lst)
-  (rest lst))
-
-(defun typeof (value)
-  (typeof value))
-
-(defun eq (value1 value2)
-  (eq value1 value2))
-
-(defun prep (val lst)
-  (prep val lst))
-
-(defun apply (func args)
-  (apply func args))
 
 (defun map1 (func args_list)
   (if (any (mapf null args_list))
