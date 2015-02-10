@@ -81,7 +81,7 @@ def destructure(params, args):
                             .format(len(params) - 2, len(args)))
 
         args = args[:len(params) - 2] + [args[len(params) - 2:]]
-        del params[-2]
+        params = params[:-2] + params[-1:]
     elif len(params) != len(args):
         raise EvalError('Parameter list and the provided arguments do not match.\n'
                         '    Expected {} argument(s) but got {}.'
