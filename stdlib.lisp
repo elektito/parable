@@ -123,3 +123,18 @@
 
 (defun map (func &rest args_list)
   (map1 func args_list))
+
+(defun = (v1 v2)
+  (cond ((not (eq (typeof v1) (typeof v2)))
+         nil)
+        ((and (atom v1) (atom v2))
+         (eq v1 v2))
+        ((and (null v1) (null v2))
+         't)
+        ((and (null v1) (not (null v2)))
+         nil)
+        ((and (null v2) (not (null v1)))
+         nil)
+        ('t
+         (and (= (first v1) (first v2))
+              (= (rest v1) (rest v2))))))
