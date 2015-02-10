@@ -280,9 +280,11 @@ def eval_apply(sexp, env):
     if len(sexp) != 3:
         raise EvalError('`apply` expects 2 arguments; {} given.'.format(len(sexp) - 1), sexp)
 
-    func = sexp[1]
+    func = eval(sexp[1], env)
+    if not isinstance(func, Function):
+        raise EvalError('`apply` first argument must be a function; got {}.'.format(func), sexp[1])
     args = eval(sexp[2], env)
-    return eval([func] + args, env)
+    return func.call(args)
 
 def eval(exp, env):
     if type(exp) == List:
