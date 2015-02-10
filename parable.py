@@ -193,6 +193,8 @@ def eval_eq(sexp, env):
     second = eval(sexp[2], env)
     if type(first) != list and type(second) != list:
         return Symbol('t') if first == second else []
+    elif first == second == []:
+        return Symbol('t')
     else:
         return []
 

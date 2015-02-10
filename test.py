@@ -198,6 +198,15 @@ class ParableCoreTest(unittest.TestCase):
         result = eval_str(exp)
         self.assertEqual(result, [])
 
+        # This was not originally planned, after all two lists are not
+        # `eq` and we weren't supposed to treat the empty list
+        # specially. However, as long as nil is used for `false` we
+        # need it to be equal to itself. Perhaps we'd better use
+        # separate true and false values like in clojure?
+        exp = '(eq nil nil)'
+        result = eval_str(exp)
+        self.assertEqual(result, Symbol('t'))
+
     def test_apply(self):
         exp = "(apply (fn (x y) (prep y (prep x '()))) '(10 20))"
         result = eval_str(exp)
