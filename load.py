@@ -22,6 +22,8 @@ def print_error(e):
         print e
         return
 
+    print 'Error:', e
+
     with open(e.form.filename) as f:
         all_lines = f.readlines()
 
@@ -72,6 +74,34 @@ def print_error(e):
             '{CODE_COLOR}{first_part}{HIGHLIGHT_COLOR}' \
             '{second_part}{CODE_COLOR}{third_part}{END_COLOR}'.format(**dict(d, **d2))
 
+def run_tests(f, filename, env):
+    passed = 0
+    failed = 0
+    error = 0
+
+    reader = Reader(f, filename)
+    while True:
+        form = reader.read()
+
+        if form == None:
+            break
+
+        try:
+            result = eval_form(form, env)
+            if result == []:
+                failed += 1
+                print 'Test failed.'
+            elif result == Symbol('t'):
+                passed += 1
+                print 'Test passed.'
+            else:
+                error += 1
+                print 'Test cases must return either t or nil; got {}.'.format(result)
+        except EvalError as e:
+            print 'Test error:', e
+            error += 1
+
+    return passed, failed, error
 
 def load(f, filename, env):
     reader = Reader(f, filename)
@@ -93,45 +123,82 @@ def load(f, filename, env):
 
     return env
 
-if __name__ == '__main__':
-    from sys import argv
-    if len(argv) < 2:
-        print
-        print 'usage: {} [files] form'.format(argv[0])
-        print
-        exit(10)
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(
+        description='Loads and evaluates parable files and expressions.')
+    parser.add_argument('-l', '--load', type=str, dest='load_files',
+                        nargs='+', metavar='FILES',
+                        help='Load one or more files.')
+    parser.add_argument('-t', '--test', type=str, dest='test_files',
+                        nargs='+', metavar='FILES',
+                        help='run one or more test files.')
+    parser.add_argument('-e', '--eval', type=str, dest='eval_expression',
+                        metavar='EXPR',
+                        help='Evaluate the given expression.')
+    parser.add_argument('-m', '--macro-expand', type=str,
+                        dest='expand_expression', metavar='EXPR',
+                        help='Macro-expand the given expression.')
+    args = parser.parse_args()
 
-    files = [] if len(argv) == 2 else argv[1:-1]
+    count = len(list(
+        1 for i in ('eval_expression',
+                    'expand_expression',
+                    'test_files')
+        if getattr(args, i) != None))
+
+    if count > 1:
+        print 'Only one of -t, -m and -e can be used.'
+        exit(1)
+    elif count == 0:
+        print 'Either -t, -m or -e must be used.'
+        exit(1)
 
     env = {}
-    for filename in files:
-        with open(filename) as f:
+    for lib in args.load_files:
+        with open(lib) as f:
             try:
-                env.update(load(f, filename, env))
-            except LoadWarning as w:
-                print 'Warning in file {}:'.format(filename), w
-                if w.form != None:
-                    print '   form:', w.form
-                exit(11)
-            except LoadError as e:
-                print 'Error in file {}:'.format(filename), e
-                if e.form != None:
-                    print '   form:', e.form
-                exit(11)
-            except ReadError as e:
-                print 'Read Error in file {}:'.format(filename), e
-                exit(11)
-            except EvalError as e:
-                print 'Eval Error in file {}:'.format(filename), e
+                env.update(load(f, lib, env))
+            except (LoadError, LoadWarning) as e:
                 print_error(e)
-                exit(11)
+                exit(2)
 
-    try:
-        ret = eval_form(Reader(argv[-1], '<string>').read(), env)
-    except ReadError as e:
-        print 'Read Error:', e
-    except EvalError as e:
-        print 'Eval Error:', e
-        print_error(e)
-    else:
-        print ret
+    if args.eval_expression:
+        try:
+            form = Reader(args.eval_expression, '<string>').read()
+            result = eval_form(form, env)
+        except (ReadError, EvalError) as e:
+            print_error(e)
+            exit(2)
+        print 'Evaluation Result:', result
+    elif args.expand_expression:
+        try:
+            form = Reader(args.expand_expression, '<string>').read()
+            result = macro_expand(form, env)
+        except (ReadError, EvalError) as e:
+            print_error(e)
+            exit(2)
+        print 'Macro Expansion Result:', result
+    elif args.test_files:
+        passed = failed = error = 0
+        for test_file in args.test_files:
+            try:
+                with open(test_file) as f:
+                    p, f, e = run_tests(f, test_file, env)
+                    passed += p
+                    failed += f
+                    error += e
+            except ReadError as e:
+                print_error(e)
+                exit(2)
+
+        print 'Total tests:', passed + failed + error
+        print '   Successful:', passed
+        print '   Failed:', failed
+        print '   Error:', error
+
+        if failed != 0 or error != 0:
+            exit(3)
+
+if __name__ == '__main__':
+    main()
