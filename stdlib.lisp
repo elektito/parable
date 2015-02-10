@@ -31,11 +31,11 @@
 (defun not (v)
   (if v '() 't))
 
-(defun and (u v)
-  (if u (if v 't '()) '()))
+(defun and (&rest values)
+  (all values))
 
-(defun or (u v)
-  (if u 't (if v 't '())))
+(defun or (&rest values)
+  (any values))
 
 (defun append (l1 l2)
   (if (null l1)
@@ -85,7 +85,8 @@
           '())))
 
 (defun zip1 (lists)
-  (if (any (mapf null lists))
+  (if (or (null lists)
+          (any (mapf null lists)))
       '()
       (prep (firsts lists) (zip1 (rests lists)))))
 
@@ -102,7 +103,7 @@
       (list 'if
             (ffirst pairs)
             (second (first pairs))
-            (list 'cond (rest pairs)))))
+            (prep 'cond (rest pairs)))))
 
 (defmac cond (&rest pairs)
   (cond1 pairs))
@@ -116,7 +117,8 @@
       't))
 
 (defun map1 (func args_list)
-  (if (any (mapf null args_list))
+  (if (or (null args_list)
+          (any (mapf null args_list)))
       '()
       (prep (apply func (firsts args_list))
             (map1 func (rests args_list)))))
