@@ -48,16 +48,19 @@
 (not (or nil nil))
 
 ;; append
-(= (append '(1 2) '(3 4))
-   '(1 2 3 4))
-(= (append nil '(1 2))
-   '(1 2))
-(= (append '(1 2) nil)
-   '(1 2))
-(= (append '(1) '(2 3))
-   '(1 2 3))
+(= (append) nil)
+(= (append '(1))
+   '(1))
 (= (append '(1 2) '(3))
    '(1 2 3))
+(= (append '(1) '(2 3))
+   '(1 2 3))
+(= (append '(1 2) '(3) '(4 5))
+   '(1 2 3 4 5))
+(= (append nil '(1 2) '(3))
+   '(1 2 3))
+(= (append '(1 2) nil)
+   '(1 2))
 
 ;; mapf
 (= (mapf null '(1 2 '(1) () '(x y)))

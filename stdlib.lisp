@@ -37,10 +37,19 @@
 (defun or (&rest values)
   (any values))
 
-(defun append (l1 l2)
+(defun append2 (l1 l2)
   (if (null l1)
       l2
-      (prep (first l1) (append (rest l1) l2))))
+      (prep (first l1) (append2 (rest l1) l2))))
+
+(defun append1 (lists)
+  (if (null lists)
+      nil
+      (append2 (first lists)
+               (append1 (rest lists)))))
+
+(defun append (&rest lists)
+  (append1 lists))
 
 (defun mapf (func args)
   (if (null args)
