@@ -106,6 +106,14 @@
   (prep (list 'fn (firsts pairs) form)
         (mapf second pairs)))
 
+(defmac let* (pairs form)
+  (if (null pairs)
+      form
+      (list (list 'fn
+                  (list (ffirst pairs))
+                  (list 'let* (rest pairs) form))
+            (second (first pairs)))))
+
 (defun cond1 (pairs)
   (if (null pairs)
       '()

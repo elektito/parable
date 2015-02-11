@@ -133,6 +133,13 @@
        (= y 'foo)
        (= z "bar")))
 
+;; let*
+(let* ((x 10))
+  (= x 10))
+(let* ((x 2)
+      (y x))
+  (= y 2))
+
 ;; cond
 (not (cond))
 (= 100
