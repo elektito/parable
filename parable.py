@@ -37,7 +37,7 @@ class Function(object):
 
     def call(self, args):
         params = self.params
-        args = List(args)
+        args = List(args) if not isinstance(args, list) else args
 
         if len(params) >= 2 and params[-2] == Symbol('&rest'):
             if len(args) < len(params) - 2:
@@ -338,7 +338,18 @@ def eval_sexp(sexp, env):
 
     if isinstance(first, Function):
         # evaluate arguments.
-        args = [eval(i, env) for i in args]
+        args = List([eval(i, env) for i in args])
+        if len(sexp) > 1:
+            args.start_row = sexp[1].start_row
+            args.start_col = sexp[1].start_col
+            args.end_row = sexp[-1].end_row
+            args.end_col = sexp[-1].end_col
+        else:
+            args.start_row = sexp.start_row
+            args.start_col = sexp.start_col
+            args.end_row = sexp.end_row
+            args.end_col = sexp.end_col
+        args.filename = sexp.filename
 
         return first.call(args)
     elif isinstance(first, Macro):
