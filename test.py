@@ -1,6 +1,7 @@
 import parable
 from parable import Symbol, Function, List, Integer, String
 from read import Reader
+from pprint import pprint
 
 import unittest
 
@@ -469,6 +470,16 @@ class ParableUtilsTest(unittest.TestCase):
         result, expanded = parable.macro_expand(exp, {})
         self.assertFalse(expanded)
         self.assertEqual(result, 1000)
+
+    def test_pprint(self):
+        self.assertEqual(pprint([]), 'nil')
+        self.assertEqual(pprint(Symbol('foo')), 'foo')
+        self.assertEqual(pprint(String("foo")), '"foo"')
+        self.assertEqual(pprint(Integer(1018)), '1018')
+        self.assertEqual(pprint([Symbol('quote'), Symbol('foo')]), "'foo")
+        self.assertEqual(pprint([Symbol('backquote'), Symbol('x')]), '`x')
+        self.assertEqual(pprint([Symbol('unquote'), Symbol('x')]), ',x')
+        self.assertEqual(pprint([Symbol('unquote-splicing'), Symbol('x')]), ',@x')
 
 if __name__ == '__main__':
     unittest.main()

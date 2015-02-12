@@ -1,5 +1,6 @@
 from parable import Symbol, eval as eval_form, EvalError, macro_expand, List
 from read import Reader, ReadError, EofReadError
+from pprint import pprint
 
 class LoadWarning(RuntimeWarning):
     def __init__(self, msg, form):
@@ -170,7 +171,7 @@ def main():
         except (ReadError, EvalError) as e:
             print_error(e)
             exit(2)
-        print 'Evaluation Result:', result
+        print 'Evaluation Result:', pprint(result)
     elif args.expand_expression:
         try:
             form = Reader(args.expand_expression, '<string>').read()
@@ -178,7 +179,7 @@ def main():
         except (ReadError, EvalError) as e:
             print_error(e)
             exit(2)
-        print 'Macro Expansion Result:', result
+        print 'Macro Expansion Result:', result[1], pprint(result[0])
     elif args.test_files:
         passed = failed = error = 0
         for test_file in args.test_files:
