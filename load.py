@@ -106,8 +106,10 @@ def run_tests(f, filename, env):
             else:
                 error += 1
                 print 'Test cases must return either t or nil; got {}.'.format(result)
+                display_form(form, False)
         except EvalError as e:
             print 'Test error:', e
+            display_form(form, False)
             error += 1
 
     return passed, failed, error
