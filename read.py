@@ -95,6 +95,36 @@ class Reader(object):
             self.add_metadata(form)
             return form
 
+        if b == "`":
+            backquote = Symbol('backquote')
+            self.mark()
+            self.add_metadata(backquote)
+
+            self.mark()
+            self.next()
+            value = self.read()
+            form = List([backquote, value])
+            self.add_metadata(form)
+            return form
+
+        if b == ",":
+            self.next()
+            if self.current() == '@':
+                name = 'unquote-splicing'
+            else:
+                self.go_back()
+                name = 'unquote'
+            unquote = Symbol(name)
+            self.mark()
+            self.add_metadata(unquote)
+
+            self.mark()
+            self.next()
+            value = self.read()
+            form = List([unquote, value])
+            self.add_metadata(form)
+            return form
+
         self.mark()
 
         # is it a string literal?

@@ -144,6 +144,21 @@ class ReaderTest(unittest.TestCase):
         result = read_str(exp)
         self.assertEqual(result, [[Symbol('quote'), Symbol('x')], [Symbol('quote'), Symbol('y')]])
 
+    def test_shorthand_backquote(self):
+        exp = '`x'
+        result = read_str(exp)
+        self.assertEqual(result, [Symbol('backquote'), Symbol('x')])
+
+    def test_shorthand_unquote(self):
+        exp = ',x'
+        result = read_str(exp)
+        self.assertEqual(result, [Symbol('unquote'), Symbol('x')])
+
+    def test_shorthand_unquote_splicing(self):
+        exp = ',@x'
+        result = read_str(exp)
+        self.assertEqual(result, [Symbol('unquote-splicing'), Symbol('x')])
+
     def test_integer(self):
         exp = '1080'
         result = read_str(exp)
