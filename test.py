@@ -392,12 +392,12 @@ class ParableCoreTest(unittest.TestCase):
         result = eval_str(exp)
         self.assertEqual(result, [Symbol('a'), Symbol('b')])
 
-    def test_too_many_arguments(self):
+    def test_too_many_arguments_to_function(self):
         exp = "((fn (x) x) 1 2)"
         with self.assertRaises(EvalError):
             result = eval_str(exp)
 
-    def test_too_few_arguments(self):
+    def test_too_few_arguments_to_function(self):
         exp = "((fn (x y) x) 1)"
         with self.assertRaises(EvalError):
             result = eval_str(exp)
@@ -420,6 +420,16 @@ class ParableCoreTest(unittest.TestCase):
         exp = "((mac (a (b (c)) d) (prep a (prep b (prep c (prep d '()))))) if ('t ('a)) 'b)"
         result = eval_str(exp)
         self.assertEqual(result, Symbol('a'))
+
+    def test_too_many_arguments_to_macro(self):
+        exp = "((mac (x) x) 1 2)"
+        with self.assertRaises(EvalError):
+            result = eval_str(exp)
+
+    def test_too_few_arguments_to_macro(self):
+        exp = "((mac (x y) x) 1)"
+        with self.assertRaises(EvalError):
+            result = eval_str(exp)
 
     def test_lexical_scope(self):
         # first create a function that returns the value of a symbol x
