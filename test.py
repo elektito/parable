@@ -1,5 +1,5 @@
 import parable
-from parable import Symbol, Function, List, Integer, String
+from parable import Symbol, Function, List, Integer, String, EvalError
 from read import Reader
 from pprint import pprint
 
@@ -391,6 +391,16 @@ class ParableCoreTest(unittest.TestCase):
         exp = "((fn (a b &rest r) (prep a (prep b r))) 'a 'b)"
         result = eval_str(exp)
         self.assertEqual(result, [Symbol('a'), Symbol('b')])
+
+    def test_too_many_arguments(self):
+        exp = "((fn (x) x) 1 2)"
+        with self.assertRaises(EvalError):
+            result = eval_str(exp)
+
+    def test_too_few_arguments(self):
+        exp = "((fn (x y) x) 1)"
+        with self.assertRaises(EvalError):
+            result = eval_str(exp)
 
     def test_macro_call(self):
         exp = "((mac (a b c) b) (a b) (if 't 'a 'b) (p q))"
