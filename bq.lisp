@@ -44,7 +44,7 @@
   (cond ((atom form)
          (list 'quote form))
         ((bq-is-unquote form)
-         form)
+         (second form))
         ((bq-is-unquote-splicing form)
          (list 'quote '#:ERROR:#))
         ((bq-is-backquote form)
