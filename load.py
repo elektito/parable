@@ -54,6 +54,10 @@ def display_form(form, context):
             first_part=''
             second_part=line[:form.end_col+1]
             third_part=line[form.end_col+1:]
+        elif form.start_row < lineno < form.end_row:
+            first_part = ''
+            second_part = line
+            third_part = ''
         else:
             first_part=line[:form.start_col]
             second_part=line[form.start_col:form.end_col+1]
