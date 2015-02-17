@@ -1,4 +1,11 @@
 language: python
 python:
   - "2.7"
-script: ./runtests.sh
+install:
+  - pip install coveralls
+script:
+  - coverage run test.py
+  - coverage report -m
+  - python load.py -l stdlib.lisp bq.lisp -t test-stdlib.lisp test-bq.lisp
+after_success:
+  coveralls
