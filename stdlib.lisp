@@ -157,3 +157,6 @@
         ('t
          (and (= (first v1) (first v2))
               (= (rest v1) (rest v2))))))
+
+(defun eval (form)
+  ((mac () form)))

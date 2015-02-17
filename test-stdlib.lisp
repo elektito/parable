@@ -175,3 +175,13 @@
   (= (map foo '(10 20) '(foo bar))
      '((foo 10) (bar 20))))
 (= (map (fn () 10)) nil)
+
+;; eval
+(= (eval 1) 1)
+(= (eval ''foo) 'foo)
+(= (eval "foo") "foo")
+(= (eq 'foo 'foo) 't)
+(= (eval '(if nil (list 1) (list 2)))
+   '(2))
+(= (eval '(let ((x 10)) x))
+   10)
