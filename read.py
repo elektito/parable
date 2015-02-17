@@ -1,4 +1,4 @@
-from parable import Symbol, List, Integer, String
+from parable import Symbol, List, Bool, Integer, String
 from cStringIO import StringIO
 
 class ReadError(RuntimeError):
@@ -163,10 +163,15 @@ class Reader(object):
         except ValueError:
             pass # not an integer
 
-        sym = Symbol(atom)
-        self.add_metadata(sym)
+        if atom == '#t':
+            ret = Bool(True)
+        elif atom == '#f':
+            ret = Bool(False)
+        else:
+            ret = Symbol(atom)
+        self.add_metadata(ret)
         self.next()
-        return sym
+        return ret
 
     def read_list(self):
         b = self.current()

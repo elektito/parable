@@ -1,5 +1,5 @@
 import parable
-from parable import Symbol, Function, Macro, List, Integer, String, EvalError
+from parable import Symbol, Function, Macro, List, Bool, Integer, String, EvalError
 from read import Reader
 from pprint import pprint
 
@@ -159,6 +159,15 @@ class ReaderTest(unittest.TestCase):
         result = read_str(exp)
         self.assertEqual(result, [Symbol('unquote-splicing'), Symbol('x')])
 
+    def test_bool(self):
+        exp = '#t'
+        result = read_str(exp)
+        self.assertEqual(result, Bool(True))
+
+        exp = '#f'
+        result = read_str(exp)
+        self.assertEqual(result, Bool(False))
+
     def test_integer(self):
         exp = '1080'
         result = read_str(exp)
@@ -244,11 +253,15 @@ class ParableCoreTest(unittest.TestCase):
     def test_bool(self):
         exp = '#t'
         result = eval_str(exp)
-        self.assertEqual(result, True)
+        self.assertEqual(result, Bool(True))
 
         exp = '#f'
         result = eval_str(exp)
-        self.assertEqual(result, False)
+        self.assertEqual(result, Bool(False))
+
+        exp = "'(#t #f)"
+        result = eval_str(exp)
+        self.assertEqual(result, [Bool(True), Bool(False)])
 
     def test_integer(self):
         exp = '1080'

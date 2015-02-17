@@ -107,6 +107,23 @@ class List(list):
     def __repr__(self):
         return 'L{}'.format(super(List, self).__repr__())
 
+class Bool(object):
+    def __init__(self, v):
+        self.value = v
+        self.start_row = 0
+        self.start_col = 0
+        self.end_row = 0
+        self.end_col = 0
+        self.filename = ''
+
+    def __eq__(self, other):
+        if type(other) != Bool:
+            other = Bool(other)
+        return self.value == other.value
+
+    def __repr__(self):
+        return 'B{}'.format(self.value)
+
 class Integer(int):
     def __new__(cls, *args, **kwargs):
         return super(Integer, cls).__new__(cls, *args, **kwargs)
@@ -206,12 +223,12 @@ def eval_if(sexp, env):
         raise EvalError('`if` form accepts exactly 3 arguments; {} given.'.format(len(sexp) - 1), sexp)
 
     cond = eval(sexp[1], env)
-    if cond == True:
+    if cond == Bool(True):
         return eval(sexp[2], env)
-    elif cond == False:
+    elif cond == Bool(False):
         return eval(sexp[3], env)
     else:
-        raise EvalError('`if` condition can only be a boolean.', sexp[1])
+        raise EvalError('`if` condition can only be a boolean; got a {}.'.format(type(cond)), sexp[1])
 
 def eval_quote(sexp, env):
     assert sexp[0].name == 'quote'
@@ -229,7 +246,7 @@ def eval_typeof(sexp, env):
                 Symbol: Symbol('symbol'),
                 Function: Symbol('function'),
                 Macro: Symbol('macro'),
-                bool: Symbol('bool'),
+                Bool: Symbol('bool'),
                 Integer: Symbol('int'),
                 String: Symbol('str')}.get(type(val), None)
     assert val_type != None
@@ -272,11 +289,11 @@ def eval_eq(sexp, env):
     first = eval(sexp[1], env)
     second = eval(sexp[2], env)
     if type(first) != List and type(second) != List:
-        return True if first == second else False
+        return Bool(True) if first == second else Bool(False)
     elif first == second == []:
-        return True
+        return Bool(True)
     else:
-        return False
+        return Bool(False)
 
 def eval_apply(sexp, env):
     assert sexp[0].name == 'apply'
@@ -296,14 +313,10 @@ def eval(exp, env):
         return exp
     elif type(exp) == String:
         return exp
-    elif type(exp) == bool:
+    elif type(exp) == Bool:
         return exp
     elif exp == Symbol('nil'):
         return List()
-    elif exp == Symbol('#t'):
-        return True
-    elif exp == Symbol('#f'):
-        return False
 
     if exp not in env:
         raise EvalError('Undefined variable: {}'.format(exp.name), exp)
