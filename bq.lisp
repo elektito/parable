@@ -9,19 +9,22 @@
   form)
 
 (defun bq-is-unquote (form)
-  (cond ((atom form) nil)
-        ((null form) nil)
-        ((eq (first form) 'unquote) 't)))
+  (cond ((atom form) #f)
+        ((null form) #f)
+        ((eq (first form) 'unquote) #t)
+        (#t #f)))
 
 (defun bq-is-unquote-splicing (form)
-  (cond ((atom form) nil)
-        ((null form) nil)
-        ((eq (first form) 'unquote-splicing) 't)))
+  (cond ((atom form) #f)
+        ((null form) #f)
+        ((eq (first form) 'unquote-splicing) #t)
+        (#t #f)))
 
 (defun bq-is-backquote (form)
-  (cond ((atom form) nil)
-        ((null form) nil)
-        ((eq (first form) 'backquote) 't)))
+  (cond ((atom form) #f)
+        ((null form) #f)
+        ((eq (first form) 'backquote) #t)
+        (#t #f)))
 
 (defun bq-process-list-item (form)
   (cond ((atom form)
@@ -32,7 +35,7 @@
          (second form))
         ((bq-is-backquote form)
          (list 'quote (list '#:ERROR:NESTED-BACKQUOTES:#)))
-        ('t
+        (#t
          (list 'list
                (bq-process-list form)))))
 
@@ -49,7 +52,7 @@
          (list 'quote '#:ERROR:#))
         ((bq-is-backquote form)
          (list 'quote '#:ERROR:NESTED-BACKQUOTES:#))
-        ('t
+        (#t
          (bq-process-list form))))
 
 (defmac backquote (form)

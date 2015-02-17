@@ -241,6 +241,15 @@ def eval_str(s, env={}):
     return parable.eval(exp, env)
 
 class ParableCoreTest(unittest.TestCase):
+    def test_bool(self):
+        exp = '#t'
+        result = eval_str(exp)
+        self.assertEqual(result, True)
+
+        exp = '#f'
+        result = eval_str(exp)
+        self.assertEqual(result, False)
+
     def test_integer(self):
         exp = '1080'
         result = eval_str(exp)
@@ -261,13 +270,17 @@ class ParableCoreTest(unittest.TestCase):
         self.assertEqual(result, [])
 
     def test_if(self):
-        exp = "(if 't 'a 'b)"
+        exp = "(if #t 'a 'b)"
         result = eval_str(exp)
         self.assertEqual(result, Symbol('a'))
 
-        exp = "(if '() 'a 'b)"
+        exp = "(if #f 'a 'b)"
         result = eval_str(exp)
         self.assertEqual(result, Symbol('b'))
+
+        exp = "(if nil 'a 'b)"
+        with self.assertRaises(EvalError):
+            result = eval_str(exp)
 
     def test_quote(self):
         exp = '(quote x)'
@@ -278,6 +291,14 @@ class ParableCoreTest(unittest.TestCase):
         exp = "(typeof 'x)"
         result = eval_str(exp)
         self.assertEqual(result, Symbol('symbol'))
+
+        exp = "(typeof #t)"
+        result = eval_str(exp)
+        self.assertEqual(result, Symbol('bool'))
+
+        exp = "(typeof #f)"
+        result = eval_str(exp)
+        self.assertEqual(result, Symbol('bool'))
 
         exp = "(typeof 10)"
         result = eval_str(exp)
@@ -317,35 +338,35 @@ class ParableCoreTest(unittest.TestCase):
     def test_eq(self):
         exp = "(eq 'x 'x)"
         result = eval_str(exp)
-        self.assertEqual(result, Symbol('t'))
+        self.assertEqual(result, True)
 
         exp = "(eq 'x 'y)"
         result = eval_str(exp)
-        self.assertEqual(result, [])
+        self.assertEqual(result, False)
 
         exp = "(eq '(a b) '(a b))"
         result = eval_str(exp)
-        self.assertEqual(result, [])
+        self.assertEqual(result, False)
 
         exp = "(eq 1 1)"
         result = eval_str(exp)
-        self.assertEqual(result, Symbol('t'))
+        self.assertEqual(result, True)
 
         exp = "(eq 1 2)"
         result = eval_str(exp)
-        self.assertEqual(result, [])
+        self.assertEqual(result, False)
 
         exp = '(eq "foo" "foo")'
         result = eval_str(exp)
-        self.assertEqual(result, Symbol('t'))
+        self.assertEqual(result, True)
 
         exp = '(eq "foo" "fooo")'
         result = eval_str(exp)
-        self.assertEqual(result, [])
+        self.assertEqual(result, False)
 
         exp = '(eq 1 "1")'
         result = eval_str(exp)
-        self.assertEqual(result, [])
+        self.assertEqual(result, False)
 
         # This was not originally planned, after all two lists are not
         # `eq` and we weren't supposed to treat the empty list
@@ -354,7 +375,7 @@ class ParableCoreTest(unittest.TestCase):
         # separate true and false values like in clojure?
         exp = '(eq nil nil)'
         result = eval_str(exp)
-        self.assertEqual(result, Symbol('t'))
+        self.assertEqual(result, True)
 
     def test_apply(self):
         exp = "(apply (fn (x y) (prep y (prep x '()))) '(10 20))"
@@ -408,7 +429,7 @@ class ParableCoreTest(unittest.TestCase):
             result = eval_str(exp)
 
     def test_macro_call(self):
-        exp = "((mac (a b c) b) (a b) (if 't 'a 'b) (p q))"
+        exp = "((mac (a b c) b) (a b) (if #t 'a 'b) (p q))"
         result = eval_str(exp)
         self.assertEqual(result, Symbol('a'))
 
@@ -422,7 +443,7 @@ class ParableCoreTest(unittest.TestCase):
         self.assertEqual(result, Symbol('dR2'))
 
     def test_destructuring_macro_call(self):
-        exp = "((mac (a (b (c)) d) (prep a (prep b (prep c (prep d '()))))) if ('t ('a)) 'b)"
+        exp = "((mac (a (b (c)) d) (prep a (prep b (prep c (prep d '()))))) if (#t ('a)) 'b)"
         result = eval_str(exp)
         self.assertEqual(result, Symbol('a'))
 
@@ -520,6 +541,8 @@ class ParableUtilsTest(unittest.TestCase):
         self.assertEqual(pprint([]), 'nil')
         self.assertEqual(pprint(Symbol('foo')), 'foo')
         self.assertEqual(pprint(String("foo")), '"foo"')
+        self.assertEqual(pprint(True), '#t')
+        self.assertEqual(pprint(False), '#f')
         self.assertEqual(pprint(Integer(1018)), '1018')
         self.assertEqual(pprint([Symbol('quote'), Symbol('foo')]), "'foo")
         self.assertEqual(pprint([Symbol('backquote'), Symbol('x')]), '`x')

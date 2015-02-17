@@ -206,10 +206,12 @@ def eval_if(sexp, env):
         raise EvalError('`if` form accepts exactly 3 arguments; {} given.'.format(len(sexp) - 1), sexp)
 
     cond = eval(sexp[1], env)
-    if cond == []:
+    if cond == True:
+        return eval(sexp[2], env)
+    elif cond == False:
         return eval(sexp[3], env)
     else:
-        return eval(sexp[2], env)
+        raise EvalError('`if` condition can only be a boolean.', sexp[1])
 
 def eval_quote(sexp, env):
     assert sexp[0].name == 'quote'
@@ -227,6 +229,7 @@ def eval_typeof(sexp, env):
                 Symbol: Symbol('symbol'),
                 Function: Symbol('function'),
                 Macro: Symbol('macro'),
+                bool: Symbol('bool'),
                 Integer: Symbol('int'),
                 String: Symbol('str')}.get(type(val), None)
     assert val_type != None
@@ -269,11 +272,11 @@ def eval_eq(sexp, env):
     first = eval(sexp[1], env)
     second = eval(sexp[2], env)
     if type(first) != List and type(second) != List:
-        return Symbol('t') if first == second else List()
+        return True if first == second else False
     elif first == second == []:
-        return Symbol('t')
+        return True
     else:
-        return List()
+        return False
 
 def eval_apply(sexp, env):
     assert sexp[0].name == 'apply'
@@ -293,8 +296,14 @@ def eval(exp, env):
         return exp
     elif type(exp) == String:
         return exp
+    elif type(exp) == bool:
+        return exp
     elif exp == Symbol('nil'):
         return List()
+    elif exp == Symbol('#t'):
+        return True
+    elif exp == Symbol('#f'):
+        return False
 
     if exp not in env:
         raise EvalError('Undefined variable: {}'.format(exp.name), exp)

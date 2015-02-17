@@ -1,5 +1,8 @@
 from parable import Symbol, String, Integer, List, Function, Macro
 
+def pprint_bool(form):
+    return '#t' if form else '#f'
+
 def pprint_symbol(form):
     return form.name
 
@@ -45,6 +48,7 @@ def pprint(form):
 
     result = {
         Symbol: pprint_symbol,
+        bool: pprint_bool,
         Integer: pprint_integer,
         String: pprint_string,
         Function: pprint_function,

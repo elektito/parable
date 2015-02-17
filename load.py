@@ -100,16 +100,16 @@ def run_tests(f, filename, env):
 
         try:
             result = eval_form(form, env)
-            if result == []:
+            if result == False:
                 failed += 1
                 print 'Test failed:'
                 display_form(form, False)
-            elif result == Symbol('t'):
+            elif result == True:
                 passed += 1
                 print 'Test passed.'
             else:
                 error += 1
-                print 'Test cases must return either t or nil; got {}.'.format(result)
+                print 'Test cases must return either #t or #f; got {}.'.format(result)
                 display_form(form, False)
         except EvalError as e:
             print 'Test error:', e

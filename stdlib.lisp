@@ -26,10 +26,10 @@
   (apply func args))
 
 (defun null (v)
-  (if v '() 't))
+  (if (eq v nil) #t #f))
 
 (defun not (v)
-  (if v '() 't))
+  (if v #f #t))
 
 (defun and (&rest values)
   (all values))
@@ -81,17 +81,17 @@
 
 (defun any (values)
   (if (null values)
-      '()
+      #f
       (if (first values)
-          't
+          #t
           (any (rest values)))))
 
 (defun all (values)
   (if (null values)
-      't
+      #t
       (if (first values)
           (all (rest values))
-          '())))
+          #f)))
 
 (defun zip1 (lists)
   (if (or (null lists)
@@ -116,7 +116,7 @@
 
 (defun cond1 (pairs)
   (if (null pairs)
-      '()
+      #f
       (list 'if
             (ffirst pairs)
             (second (first pairs))
@@ -129,9 +129,7 @@
   (list 'if condition body '()))
 
 (defun atom (value)
-  (if (eq (typeof value) 'list)
-      '()
-      't))
+  (not (eq (typeof value) 'list)))
 
 (defun map1 (func args_list)
   (if (or (null args_list)
@@ -145,16 +143,16 @@
 
 (defun = (v1 v2)
   (cond ((not (eq (typeof v1) (typeof v2)))
-         nil)
+         #f)
         ((and (atom v1) (atom v2))
          (eq v1 v2))
         ((and (null v1) (null v2))
-         't)
+         #t)
         ((and (null v1) (not (null v2)))
-         nil)
+         #f)
         ((and (null v2) (not (null v1)))
-         nil)
-        ('t
+         #f)
+        (#t
          (and (= (first v1) (first v2))
               (= (rest v1) (rest v2))))))
 

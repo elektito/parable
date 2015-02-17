@@ -1,11 +1,15 @@
 ;; not
-(eq (not 't) nil)
-(eq (not nil) 't)
+(eq (not #t) #f)
+(eq (not #f) #t)
 
 ;; =
+(= #t #t)
+(= #f #f)
 (= 1 1)
 (= 'x 'x)
 (= "foo" "foo")
+(not (= #t #f))
+(not (= #f #t))
 (not (= 1 2))
 (not (= "foo" "Foo"))
 (not (= 'foo "foo"))
@@ -21,31 +25,31 @@
 (= (list 1 'x "foo") '(1 x "foo"))
 
 ;; null
-(eq (null nil) 't)
-(eq (null '(1 2 3)) nil)
+(eq (null nil) #t)
+(eq (null '(1 2 3)) #f)
 
 ;; and
 (and)
-(and 't)
-(and 't 't)
-(and 't 't 't)
-(not (and 't nil 't 't))
-(not (and nil))
-(not (and nil 't))
-(not (and 't nil))
-(not (and nil nil))
+(and #t)
+(and #t #t)
+(and #t #t #t)
+(not (and #t #f #t #t))
+(not (and #f))
+(not (and #f #t))
+(not (and #t #f))
+(not (and #f #f))
 
 ;; or
 (not (or))
-(or 't)
-(not (or nil))
-(or 't 't)
-(or 't 't 't 't)
-(or 't 't 't nil 't)
-(not (or nil nil nil))
-(or 't nil)
-(or nil 't)
-(not (or nil nil))
+(or #t)
+(not (or #f))
+(or #t #t)
+(or #t #t #t #t)
+(or #t #t #t #f #t)
+(not (or #f #f #f))
+(or #t #f)
+(or #f #t)
+(not (or #f #f))
 
 ;; append
 (= (append) nil)
@@ -64,7 +68,7 @@
 
 ;; mapf
 (= (mapf null '(1 2 '(1) () '(x y)))
-   '(() () () t ()))
+   (list #f #f #f #t #f))
 (= (mapf first '((1 2) (x y) ("foo" 10 20)))
    '(1 x "foo"))
 
@@ -105,17 +109,17 @@
 
 ;; any
 (not (any nil))
-(any (list nil nil nil 't nil))
-(any (list 't))
-(not (any (list nil)))
-(not (any (list nil nil nil)))
+(any (list #f #f #f #t #f))
+(any (list #t))
+(not (any (list #f)))
+(not (any (list #f #f #f)))
 
 ;; all
 (all nil)
-(all (list 't 't 't 't 'x "foo" 12))
-(not (all (list nil)))
-(not (all (list nil nil 't nil)))
-(not (all (list 't 't nil 't)))
+(all (list #t #t #t #t))
+(not (all (list #f)))
+(not (all (list #f #f #t #f)))
+(not (all (list #t #t #f #t)))
 
 ;; zip
 (= (zip) nil)
@@ -143,23 +147,23 @@
 ;; cond
 (not (cond))
 (= 100
-   (cond ('t 100)
-         ('t 200)))
+   (cond (#t 100)
+         (#t 200)))
 (= 200
-   (cond (nil 100)
-         ('t 200)))
+   (cond (#f 100)
+         (#t 200)))
 (= 400
-   (cond (nil 100)
-         (nil 200)
-         (nil 300)
-         ('t 400)))
+   (cond (#f 100)
+         (#f 200)
+         (#f 300)
+         (#t 400)))
 
 ;; when
 (= 100
-   (when 't
+   (when #t
      100))
 (= nil
-   (when nil
+   (when #f
      100))
 
 ;; atom
@@ -180,8 +184,8 @@
 (= (eval 1) 1)
 (= (eval ''foo) 'foo)
 (= (eval "foo") "foo")
-(= (eq 'foo 'foo) 't)
-(= (eval '(if nil (list 1) (list 2)))
+(= (eq 'foo 'foo) #t)
+(= (eval '(if #f (list 1) (list 2)))
    '(2))
 (= (eval '(let ((x 10)) x))
    10)
