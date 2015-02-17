@@ -1,5 +1,5 @@
 import parable
-from parable import Symbol, Function, List, Integer, String, EvalError
+from parable import Symbol, Function, Macro, List, Integer, String, EvalError
 from read import Reader
 from pprint import pprint
 
@@ -525,6 +525,9 @@ class ParableUtilsTest(unittest.TestCase):
         self.assertEqual(pprint([Symbol('backquote'), Symbol('x')]), '`x')
         self.assertEqual(pprint([Symbol('unquote'), Symbol('x')]), ',x')
         self.assertEqual(pprint([Symbol('unquote-splicing'), Symbol('x')]), ',@x')
+        self.assertEqual(pprint(Function(List(), 10, {})), '(fn () 10)')
+        self.assertEqual(pprint(Function(List([Symbol('x')]), 10, {})), '(fn (x) 10)')
+        self.assertEqual(pprint(Macro(List([Symbol('x')]), 10, {})), '(mac (x) 10)')
 
 if __name__ == '__main__':
     unittest.main()

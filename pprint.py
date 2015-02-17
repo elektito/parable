@@ -1,4 +1,4 @@
-from parable import Symbol, String, Integer, List
+from parable import Symbol, String, Integer, List, Function, Macro
 
 def pprint_symbol(form):
     return form.name
@@ -8,6 +8,18 @@ def pprint_string(form):
 
 def pprint_integer(form):
     return '{}'.format(form)
+
+def pprint_function(form):
+    if form.params == List():
+        return '(fn () {})'.format(pprint(form.body))
+    else:
+        return '(fn {} {})'.format(pprint(form.params), pprint(form.body))
+
+def pprint_macro(form):
+    if form.params == List():
+        return '(mac () {})'.format(pprint(form.body))
+    else:
+        return '(mac {} {})'.format(pprint(form.params), pprint(form.body))
 
 def pprint_list(form):
     if len(form) == 2 and form[0] == Symbol('quote'):
@@ -35,6 +47,8 @@ def pprint(form):
         Symbol: pprint_symbol,
         Integer: pprint_integer,
         String: pprint_string,
+        Function: pprint_function,
+        Macro: pprint_macro,
         List: pprint_list
     }[type(form)](form)
 
