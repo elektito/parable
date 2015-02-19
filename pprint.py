@@ -7,7 +7,7 @@ def pprint_symbol(form):
     return form.name
 
 def pprint_string(form):
-    return '"{}"'.format(form)
+    return '"{}"'.format(form.replace('"', '\\"'))
 
 def pprint_integer(form):
     return '{}'.format(form)

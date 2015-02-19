@@ -133,9 +133,22 @@ class Reader(object):
             self.next()
             b = self.current()
             while b and b != '"':
-                atom += b
-                self.next()
-                b = self.current()
+                if b == '\\':
+                    self.next()
+                    b = self.current()
+                    if not b:
+                        continue
+
+                    atom += b
+                    self.next()
+                    b = self.current()
+                    b = self.current()
+                    if not b:
+                        continue
+                else:
+                    atom += b
+                    self.next()
+                    b = self.current()
             if not b:
                 raise ReadError('Unexpected end of file inside string literal.')
             string = String(atom)

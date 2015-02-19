@@ -1,6 +1,6 @@
 import parable
 from parable import Symbol, Function, Macro, List, Bool, Integer, String, EvalError
-from read import Reader
+from read import Reader, ReadError
 from pprint import pprint
 
 import unittest
@@ -177,6 +177,30 @@ class ReaderTest(unittest.TestCase):
         exp = '"foobar"'
         result = read_str(exp)
         self.assertEqual(result, 'foobar')
+
+        exp = '"foo\\bar"'
+        result = read_str(exp)
+        self.assertEqual(result, 'foobar')
+
+        exp = '"sth \\"sth\\" sth"'
+        result = read_str(exp)
+        self.assertEqual(result, 'sth "sth" sth')
+
+        exp = '"\\"foo"'
+        result = read_str(exp)
+        self.assertEqual(result, '"foo')
+
+        exp = '"\\""'
+        result = read_str(exp)
+        self.assertEqual(result, '"')
+
+        with self.assertRaises(ReadError):
+            exp = '"foo\\'
+            result = read_str(exp)
+
+        with self.assertRaises(ReadError):
+            exp = '"foo\\"'
+            result = read_str(exp)
 
     def test_nil(self):
         exp = "()"
@@ -554,6 +578,7 @@ class ParableUtilsTest(unittest.TestCase):
         self.assertEqual(pprint([]), 'nil')
         self.assertEqual(pprint(Symbol('foo')), 'foo')
         self.assertEqual(pprint(String("foo")), '"foo"')
+        self.assertEqual(pprint(String('sth "sth" sth')), '"sth \\"sth\\" sth"')
         self.assertEqual(pprint(True), '#t')
         self.assertEqual(pprint(False), '#f')
         self.assertEqual(pprint(Integer(1018)), '1018')
