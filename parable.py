@@ -5,6 +5,16 @@ class EvalError(RuntimeError):
         self.form = form
         super(EvalError, self).__init__(msg)
 
+class Error(object):
+    def __init__(self, type, attrs):
+        self.type = type
+        self.attrs = attrs
+
+    def __eq__(self, other):
+        if type(other) != Error:
+            return False
+        return self.type == other.type
+
 class Symbol(object):
     def __init__(self, name):
         self.name = name
@@ -221,6 +231,63 @@ def macro_expand(exp, env):
 
     return result, True
 
+def eval_error(sexp, env):
+    assert sexp[0].name == 'error'
+    if len(sexp) < 2:
+        return Error(Symbol(':error-error'),
+                     List([Symbol('msg'),
+                           String('error expects at least one argument; {} given.'.format(len(sexp) - 1)),
+                           Symbol('form'),
+                           sexp]))
+
+    error_type = eval(sexp[1], env)
+    if type(error_type) != Symbol:
+        return Error(Symbol(':error-error'),
+                     List([Symbol(':msg'),
+                           String("Invalid error type."),
+                           Symbol(':form'),
+                           sexp[1]]))
+    attrs = sexp[2:]
+    return Error(error_type, attrs)
+
+def eval_error_type(sexp, env):
+    assert sexp[0].name == 'error-type'
+    if len(sexp) != 2:
+        return Error(Symbol(':error-error'),
+                     List([Symbol('msg'),
+                           String('error-type expects exactly one argument; {} given.'.format(len(sexp) - 1)),
+                           Symbol('form'),
+                           sexp]))
+
+    error = eval(sexp[1], env)
+    if type(error) != Error:
+        return Error(Symbol(':error-error'),
+                     List([Symbol('msg'),
+                           String('error-type argument must be an Error; {} given.'.format(str(type(error)))),
+                           Symbol('form'),
+                           sexp]))
+
+    return error.type
+
+def eval_error_attrs(sexp, env):
+    assert sexp[0].name == 'error-attrs'
+    if len(sexp) != 2:
+        return Error(Symbol(':error-error'),
+                     List([Symbol('msg'),
+                           String('error-attrs expects exactly one argument; {} given.'.format(len(sexp) - 1)),
+                           Symbol('form'),
+                           sexp]))
+
+    error = eval(sexp[1], env)
+    if type(error) != Error:
+        return Error(Symbol(':error-error'),
+                     List([Symbol('msg'),
+                           String('error-attrs argument must be an Error; {} given.'.format(str(type(error)))),
+                           Symbol('form'),
+                           sexp]))
+
+    return error.attrs
+
 def eval_if(sexp, env):
     assert sexp[0].name == 'if'
     if len(sexp) != 4:
@@ -351,6 +418,9 @@ def eval_sexp(sexp, env):
            Symbol('first'): eval_first,
            Symbol('rest'): eval_rest,
            Symbol('eq'): eval_eq,
+           Symbol('error'): eval_error,
+           Symbol('error-type'): eval_error_type,
+           Symbol('error-attrs'): eval_error_attrs,
            Symbol('apply'): eval_apply}
 
     if type(first) == Symbol and first in map:

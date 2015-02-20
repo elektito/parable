@@ -1,5 +1,5 @@
 import parable
-from parable import Symbol, Function, Macro, List, Bool, Integer, String, EvalError
+from parable import Error, Symbol, Function, Macro, List, Bool, Integer, String, EvalError
 from read import Reader, ReadError, EofReadError
 from pprint import pprint
 
@@ -324,6 +324,29 @@ class ParableCoreTest(unittest.TestCase):
         exp = ":foo"
         result = eval_str(exp)
         self.assertEqual(result, Symbol(':foo'))
+
+    def test_error(self):
+        exp = '(error :foo)'
+        result = eval_str(exp)
+        self.assertEqual(result, Error(Symbol(':foo'), List()))
+
+        exp = '(error :foo 1 :sym "foo")'
+        result = eval_str(exp)
+        self.assertEqual(result, Error(Symbol(':foo'), List([1, Symbol('sym'), String('foo')])))
+
+        exp = '(error "foo")'
+        result = eval_str(exp)
+        self.assertEqual(result, Error(Symbol(':error-error'), List()))
+
+    def test_error_type(self):
+        exp = '(error-type (error :foo))'
+        result = eval_str(exp)
+        self.assertEqual(result, Symbol(':foo'))
+
+    def test_error_type(self):
+        exp = '(error-attrs (error :foo :a 10 :b 20))'
+        result = eval_str(exp)
+        self.assertEqual(result, List([Symbol(':a'), Integer(10), Symbol(':b'), Integer(20)]))
 
     def test_if(self):
         exp = "(if #t 'a 'b)"
