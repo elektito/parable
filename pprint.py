@@ -1,4 +1,12 @@
-from parable import Symbol, String, Integer, List, Function, Macro
+from parable import Error, Symbol, String, Integer, List, Function, Macro
+
+def pprint_error(form):
+    if len(form.attrs) > 0:
+        return '(error {} {})'.format(
+            form.type.name,
+            ' '.join(pprint(i) for i in form.attrs))
+    else:
+        return '(error {})'.format(form.type.name)
 
 def pprint_bool(form):
     return '#t' if form else '#f'
@@ -48,6 +56,7 @@ def pprint(form):
 
     result = {
         Symbol: pprint_symbol,
+        Error: pprint_error,
         bool: pprint_bool,
         Integer: pprint_integer,
         String: pprint_string,

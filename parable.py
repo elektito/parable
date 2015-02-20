@@ -15,6 +15,9 @@ class Error(object):
             return False
         return self.type == other.type
 
+    def __repr__(self):
+        return '<Error "{}" attrs={}>'.format(self.type.name, self.attrs)
+
 class Symbol(object):
     def __init__(self, name):
         self.name = name

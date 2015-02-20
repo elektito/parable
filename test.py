@@ -645,6 +645,8 @@ class ParableUtilsTest(unittest.TestCase):
         self.assertEqual(pprint(Function(List([Symbol('x')]), 10, {})), '(fn (x) 10)')
         self.assertEqual(pprint(Macro(List(), 10, {})), '(mac () 10)')
         self.assertEqual(pprint(Macro(List([Symbol('x')]), 10, {})), '(mac (x) 10)')
+        self.assertEqual(pprint(Error(Symbol(':foo'), List())), '(error :foo)')
+        self.assertEqual(pprint(Error(Symbol(':foo'), List([Symbol(':a'), Integer(10)]))), '(error :foo :a 10)')
 
 if __name__ == '__main__':
     unittest.main()
