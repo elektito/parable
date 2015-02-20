@@ -1,6 +1,6 @@
 import parable
 from parable import Symbol, Function, Macro, List, Bool, Integer, String, EvalError
-from read import Reader, ReadError
+from read import Reader, ReadError, EofReadError
 from pprint import pprint
 
 import unittest
@@ -93,6 +93,10 @@ class ReaderTest(unittest.TestCase):
 
     def test_whitespace(self):
         exp = '   x'
+        result = read_str(exp)
+        self.assertEqual(result, Symbol('x'))
+
+        exp = '\n\n\n   x'
         result = read_str(exp)
         self.assertEqual(result, Symbol('x'))
 
@@ -268,6 +272,16 @@ class ReaderTest(unittest.TestCase):
         self.assertEqual(result[2].start_col, 9)
         self.assertEqual(result[2].end_row, 0)
         self.assertEqual(result[2].end_col, 13)
+
+    def test_unexpected_end_of_file_in_list(self):
+        with self.assertRaises(EofReadError):
+            exp = '(100 foo "bar"'
+            result = read_str(exp)
+
+    def test_unexpected_end_of_file_in_string(self):
+        with self.assertRaises(EofReadError):
+            exp = '"bar'
+            result = read_str(exp)
 
 def eval_str(s, env={}):
     exp = read_str(s)
@@ -588,6 +602,7 @@ class ParableUtilsTest(unittest.TestCase):
         self.assertEqual(pprint([Symbol('unquote-splicing'), Symbol('x')]), ',@x')
         self.assertEqual(pprint(Function(List(), 10, {})), '(fn () 10)')
         self.assertEqual(pprint(Function(List([Symbol('x')]), 10, {})), '(fn (x) 10)')
+        self.assertEqual(pprint(Macro(List(), 10, {})), '(mac () 10)')
         self.assertEqual(pprint(Macro(List([Symbol('x')]), 10, {})), '(mac (x) 10)')
 
 if __name__ == '__main__':

@@ -19,8 +19,7 @@ class Reader(object):
 
         self.__lines = self.file.readlines()
 
-        while self.row < len(self.__lines) and self.__lines[self.row] == '':
-            self.row += 1
+        self.skip_whitespace()
 
     def current(self):
         if self.row >= len(self.__lines) or \
@@ -37,8 +36,7 @@ class Reader(object):
         if self.col >= len(self.__lines[self.row]):
             self.col = 0
             self.row += 1
-            while self.row < len(self.__lines) and self.__lines[self.row] == '':
-                self.row += 1
+            self.skip_whitespace()
 
     def go_back(self):
         if self.row == 0 and self.col == 0:
@@ -49,6 +47,7 @@ class Reader(object):
             self.row -= 1
             if self.row < 0:
                 self.row = 0
+                self.col = 0
                 return
             self.col = len(self.__lines[self.row]) - 1
 
@@ -150,7 +149,7 @@ class Reader(object):
                     self.next()
                     b = self.current()
             if not b:
-                raise ReadError('Unexpected end of file inside string literal.')
+                raise EofReadError('Unexpected end of file inside string literal.')
             string = String(atom)
             self.add_metadata(string)
             self.next()
