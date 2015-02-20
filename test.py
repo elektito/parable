@@ -451,6 +451,19 @@ class ParableCoreTest(unittest.TestCase):
         result = eval_str(exp)
         self.assertEqual(result, Symbol('b'))
 
+    def test_bad_parameter_list(self):
+        with self.assertRaises(EvalError):
+            exp = '(fn (x x) x)'
+            result = eval_str(exp)
+
+        with self.assertRaises(EvalError):
+            exp = '(fn (x y x) x)'
+            result = eval_str(exp)
+
+        with self.assertRaises(EvalError):
+            exp = '(fn (x y & y) x)'
+            result = eval_str(exp)
+
     def test_nested_function_call(self):
         list_func = '(fn (& r) r)'
         list_func = eval_str(list_func)

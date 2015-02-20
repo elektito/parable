@@ -31,6 +31,10 @@ class Function(object):
                 'Function parameter list should only contain symbols.',
                 params)
 
+        # check if the parameter list is duplicate free
+        if len(params) != len(set(params)):
+            raise EvalError('Duplicate parameters.', params)
+
         self.params = params
         self.body = body
         self.env = env
