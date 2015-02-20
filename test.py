@@ -447,7 +447,7 @@ class ParableCoreTest(unittest.TestCase):
         self.assertEqual(result, Symbol('b'))
 
     def test_nested_function_call(self):
-        list_func = '(fn (&rest r) r)'
+        list_func = '(fn (& r) r)'
         list_func = eval_str(list_func)
         env = {Symbol('list'): list_func}
         exp = "(list 1 (list 100 200) 2)"
@@ -455,12 +455,12 @@ class ParableCoreTest(unittest.TestCase):
         self.assertEqual(result, [1, [100, 200], 2])
 
     def test_function_call_with_rest(self):
-        exp = "((fn (a b &rest r) (prep a (prep b r))) 'a 'b 'c 'd)"
+        exp = "((fn (a b & r) (prep a (prep b r))) 'a 'b 'c 'd)"
         result = eval_str(exp)
         self.assertEqual(result, [Symbol('a'), Symbol('b'), Symbol('c'), Symbol('d')])
 
-        # test sending nothing for &rest
-        exp = "((fn (a b &rest r) (prep a (prep b r))) 'a 'b)"
+        # test sending nothing for the rest argument
+        exp = "((fn (a b & r) (prep a (prep b r))) 'a 'b)"
         result = eval_str(exp)
         self.assertEqual(result, [Symbol('a'), Symbol('b')])
 
@@ -475,7 +475,7 @@ class ParableCoreTest(unittest.TestCase):
             result = eval_str(exp)
 
     def test_too_few_arguments_to_function_with_rest(self):
-        exp = "((fn (x &rest y) x))"
+        exp = "((fn (x & y) x))"
         with self.assertRaises(EvalError):
             result = eval_str(exp)
 
@@ -485,11 +485,11 @@ class ParableCoreTest(unittest.TestCase):
         self.assertEqual(result, Symbol('a'))
 
     def test_macro_call_with_rest(self):
-        exp = "((mac (a (b c &rest d) e &rest f) d) a (b c quote dR1) e quote dR2)"
+        exp = "((mac (a (b c & d) e & f) d) a (b c quote dR1) e quote dR2)"
         result = eval_str(exp)
         self.assertEqual(result, Symbol('dR1'))
 
-        exp = "((mac (a (b c &rest d) e &rest f) f) a (b c quote dR1) e quote dR2)"
+        exp = "((mac (a (b c & d) e & f) f) a (b c quote dR1) e quote dR2)"
         result = eval_str(exp)
         self.assertEqual(result, Symbol('dR2'))
 
@@ -509,7 +509,7 @@ class ParableCoreTest(unittest.TestCase):
             result = eval_str(exp)
 
     def test_too_few_arguments_to_macro_with_rest(self):
-        exp = "((mac (x &rest y) x))"
+        exp = "((mac (x & y) x))"
         with self.assertRaises(EvalError):
             result = eval_str(exp)
 

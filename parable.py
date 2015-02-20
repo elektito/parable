@@ -39,7 +39,7 @@ class Function(object):
         params = self.params
         args = List(args) if not isinstance(args, list) else args
 
-        if len(params) >= 2 and params[-2] == Symbol('&rest'):
+        if len(params) >= 2 and params[-2] == Symbol('&'):
             if len(args) < len(params) - 2:
                 raise EvalError('Expected at least {} argument(s) but got {}.'
                                 .format(len(params) - 2, len(args)),
@@ -49,7 +49,7 @@ class Function(object):
                             .format(len(params), len(args)),
                             args)
 
-        if len(params) >= 2 and params[-2] == Symbol('&rest'):
+        if len(params) >= 2 and params[-2] == Symbol('&'):
             args = args[:len(params) - 2] + [args[len(params) - 2:]]
             params = params[:-2] + params[-1:]
 
@@ -164,7 +164,7 @@ def destructure(params, args):
                         .format(args),
                         args)
 
-    if len(params) >= 2 and params[-2] == Symbol('&rest'):
+    if len(params) >= 2 and params[-2] == Symbol('&'):
         if len(args) < len(params) - 2:
             raise EvalError('Parameter list and the provided arguments do not match.\n'
                             '    Expected at least {} argument(s) but got {}.'

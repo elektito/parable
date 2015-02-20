@@ -1,4 +1,4 @@
-(define list (fn (&rest items)
+(define list (fn (& items)
                  items))
 
 (define defun (mac (name args body)
@@ -31,10 +31,10 @@
 (defun not (v)
   (if v #f #t))
 
-(defun and (&rest values)
+(defun and (& values)
   (all values))
 
-(defun or (&rest values)
+(defun or (& values)
   (any values))
 
 (defun append2 (l1 l2)
@@ -48,7 +48,7 @@
       (append2 (first lists)
                (append1 (rest lists)))))
 
-(defun append (&rest lists)
+(defun append (& lists)
   (append1 lists))
 
 (defun mapf (func args)
@@ -99,7 +99,7 @@
       '()
       (prep (firsts lists) (zip1 (rests lists)))))
 
-(defun zip (&rest lists)
+(defun zip (& lists)
   (zip1 lists))
 
 (defmac let (pairs form)
@@ -122,7 +122,7 @@
             (second (first pairs))
             (prep 'cond (rest pairs)))))
 
-(defmac cond (&rest pairs)
+(defmac cond (& pairs)
   (cond1 pairs))
 
 (defmac when (condition body)
@@ -138,7 +138,7 @@
       (prep (apply func (firsts args_list))
             (map1 func (rests args_list)))))
 
-(defun map (func &rest args_list)
+(defun map (func & args_list)
   (map1 func args_list))
 
 (defun = (v1 v2)
