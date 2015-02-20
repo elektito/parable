@@ -317,6 +317,8 @@ def eval(exp, env):
         return exp
     elif exp == Symbol('nil'):
         return List()
+    elif type(exp) == Symbol and exp.name.startswith(':'):
+        return exp
 
     if exp not in env:
         raise EvalError('Undefined variable: {}'.format(exp.name), exp)

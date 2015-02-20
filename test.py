@@ -320,6 +320,11 @@ class ParableCoreTest(unittest.TestCase):
         result = eval_str(exp)
         self.assertEqual(result, [])
 
+    def test_keyword(self):
+        exp = ":foo"
+        result = eval_str(exp)
+        self.assertEqual(result, Symbol(':foo'))
+
     def test_if(self):
         exp = "(if #t 'a 'b)"
         result = eval_str(exp)
