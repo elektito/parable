@@ -1,5 +1,5 @@
 import parable
-from parable import Error, Symbol, Function, Macro, List, Bool, Integer, String, EvalError
+from parable import Error, Symbol, Function, Macro, List, Bool, Integer, String, EvalError, create_error
 from read import Reader, ReadError, EofReadError
 from pprint import pprint
 
@@ -338,6 +338,10 @@ class ParableCoreTest(unittest.TestCase):
         result = eval_str(exp)
         self.assertEqual(result, Error(Symbol(':error-error'), List()))
 
+        exp = '(error)'
+        result = eval_str(exp)
+        self.assertEqual(result, Error(Symbol(':error-error'), List()))
+
     def test_error_type(self):
         exp = '(error-type (error :foo))'
         result = eval_str(exp)
@@ -647,6 +651,202 @@ class ParableUtilsTest(unittest.TestCase):
         self.assertEqual(pprint(Macro(List([Symbol('x')]), 10, {})), '(mac (x) 10)')
         self.assertEqual(pprint(Error(Symbol(':foo'), List())), '(error :foo)')
         self.assertEqual(pprint(Error(Symbol(':foo'), List([Symbol(':a'), Integer(10)]))), '(error :foo :a 10)')
+
+class ErrorTest(unittest.TestCase):
+    def test_create_error(self):
+        err = create_error(':foo', ':a', 10, ':b', 20)
+        self.assertEqual(err, Error(Symbol(':foo'), []))
+        self.assertEqual(err.attrs, [Symbol(':a'), 10, Symbol(':b'), 20])
+
+        with self.assertRaises(RuntimeError):
+            err = create_error(':foo', 10)
+
+        with self.assertRaises(RuntimeError):
+            err = create_error(10)
+
+    def test_good_quote(self):
+        exp = "'(error :foo)"
+        result = eval_str(exp)
+        self.assertEqual(result, [Symbol('error'), Symbol(':foo')])
+
+    def test_bad_quote(self):
+        exp = "(quote x y)"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = "(quote)"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+    def test_good_eq(self):
+        exp = '(eq (error :foo) :bar)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':foo'))
+
+    def test_bad_eq(self):
+        exp = '(eq (error :foo) :bar :buz)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(eq :foo)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(eq)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+    def test_good_if(self):
+        exp = '(if (error :foo) 100 200)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':foo'))
+
+        exp = '(if #t (error :foo) 200)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':foo'))
+
+        exp = '(if #f (error :foo) 200)'
+        result = eval_str(exp)
+        self.assertEqual(result, 200)
+
+        exp = '(if #f (error :foo) (error :bar))'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':bar'))
+
+    def test_bad_if(self):
+        exp = '(if (error :foo) 100)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(if (error :foo) 100 200 300)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(if nil 100 200)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+    def test_good_typeof(self):
+        exp = '(typeof (error :foo))'
+        result = eval_str(exp)
+        self.assertEqual(result, Symbol('error'))
+
+    def test_bad_typeof(self):
+        exp = '(typeof 100 200)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(typeof)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+    def test_good_first(self):
+        exp = "(first (error :foo))"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':foo'))
+
+    def test_bad_first(self):
+        exp = "(first '(1) '(2))"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = "(first)"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = "(first 10)"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = '(first "foo")'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = '(first :foo)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+    def test_good_rest(self):
+        exp = "(rest (error :foo))"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':foo'))
+
+    def test_bad_rest(self):
+        exp = "(rest '(1) '(2))"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = "(rest)"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = "(rest 10)"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = '(rest "foo")'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = '(rest :foo)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+    def test_good_prep(self):
+        exp = "(prep (error :foo) '(2 3))"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':foo'))
+
+        exp = "(prep 1 (error :foo))"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':foo'))
+
+    def test_bad_prep(self):
+        exp = "(prep)"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = "(prep 1 '() '())"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = "(prep 1 1)"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+    def test_good_apply(self):
+        exp = "(apply (error :foo) '())"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':foo'))
+
+        exp = "(apply (fn () 1) (error :foo))"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':foo'))
+
+    def test_bad_apply(self):
+        exp = "(apply 10 '())"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = "(apply (fn (x) x) 10)"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = "(apply (fn (x) x) '(1 2))"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = "(apply (fn (x) x) '(1) '(1))"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = "(apply (fn () 1))"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = "(apply)"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
 
 if __name__ == '__main__':
     unittest.main()

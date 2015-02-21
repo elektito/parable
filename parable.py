@@ -18,6 +18,21 @@ class Error(object):
     def __repr__(self):
         return '<Error "{}" attrs={}>'.format(self.type.name, self.attrs)
 
+def create_error(typestr, *attrs):
+    def process_attrs(attrs, acc):
+        if attrs == ():
+            return Error(Symbol(typestr), List(acc))
+        elif len(attrs) >= 2:
+            acc.append(Symbol(attrs[0]))
+            acc.append(attrs[1])
+            return process_attrs(attrs[2:], acc)
+        else:
+            raise RuntimeError('Invalid error attributes.')
+
+    if type(typestr) not in [str, String]:
+        raise RuntimeError('Invalid error type.')
+    return process_attrs(attrs, [])
+
 class Symbol(object):
     def __init__(self, name):
         self.name = name
@@ -54,17 +69,23 @@ class Function(object):
 
     def call(self, args):
         params = self.params
-        args = List(args) if not isinstance(args, list) else args
+        if not isinstance(args, (List, list)):
+            return create_error(':arg-error',
+                                ':msg', 'Function argument list not a List.',
+                                ':form', args)
+        args = List(args) if isinstance(args, list) else args
 
         if len(params) >= 2 and params[-2] == Symbol('&'):
             if len(args) < len(params) - 2:
-                raise EvalError('Expected at least {} argument(s) but got {}.'
-                                .format(len(params) - 2, len(args)),
-                                args)
+                return create_error(':arg-error',
+                                    ':msg', 'Expected at least {} argument(s) but got {}.'\
+                                            .format(len(params) - 2, len(args)),
+                                    ':form', args)
         elif len(args) != len(params):
-            raise EvalError('Expected {} argument(s) but got {}.'
-                            .format(len(params), len(args)),
-                            args)
+            return create_error(':arg-error',
+                                ':msg', 'Expected {} argument(s) but got {}.' \
+                                        .format(len(params), len(args)),
+                                ':form', args)
 
         if len(params) >= 2 and params[-2] == Symbol('&'):
             args = args[:len(params) - 2] + [args[len(params) - 2:]]
@@ -238,9 +259,9 @@ def eval_error(sexp, env):
     assert sexp[0].name == 'error'
     if len(sexp) < 2:
         return Error(Symbol(':error-error'),
-                     List([Symbol('msg'),
+                     List([Symbol(':msg'),
                            String('error expects at least one argument; {} given.'.format(len(sexp) - 1)),
-                           Symbol('form'),
+                           Symbol(':form'),
                            sexp]))
 
     error_type = eval(sexp[1], env)
@@ -257,17 +278,17 @@ def eval_error_type(sexp, env):
     assert sexp[0].name == 'error-type'
     if len(sexp) != 2:
         return Error(Symbol(':error-error'),
-                     List([Symbol('msg'),
+                     List([Symbol(':msg'),
                            String('error-type expects exactly one argument; {} given.'.format(len(sexp) - 1)),
-                           Symbol('form'),
+                           Symbol(':form'),
                            sexp]))
 
     error = eval(sexp[1], env)
     if type(error) != Error:
         return Error(Symbol(':error-error'),
-                     List([Symbol('msg'),
+                     List([Symbol(':msg'),
                            String('error-type argument must be an Error; {} given.'.format(str(type(error)))),
-                           Symbol('form'),
+                           Symbol(':form'),
                            sexp]))
 
     return error.type
@@ -276,17 +297,17 @@ def eval_error_attrs(sexp, env):
     assert sexp[0].name == 'error-attrs'
     if len(sexp) != 2:
         return Error(Symbol(':error-error'),
-                     List([Symbol('msg'),
+                     List([Symbol(':msg'),
                            String('error-attrs expects exactly one argument; {} given.'.format(len(sexp) - 1)),
-                           Symbol('form'),
+                           Symbol(':form'),
                            sexp]))
 
     error = eval(sexp[1], env)
     if type(error) != Error:
         return Error(Symbol(':error-error'),
-                     List([Symbol('msg'),
+                     List([Symbol(':msg'),
                            String('error-attrs argument must be an Error; {} given.'.format(str(type(error)))),
-                           Symbol('form'),
+                           Symbol(':form'),
                            sexp]))
 
     return error.attrs
@@ -294,29 +315,48 @@ def eval_error_attrs(sexp, env):
 def eval_if(sexp, env):
     assert sexp[0].name == 'if'
     if len(sexp) != 4:
-        raise EvalError('`if` form accepts exactly 3 arguments; {} given.'.format(len(sexp) - 1), sexp)
+        return Error(Symbol(':arg-error'),
+                     List([Symbol(':msg'),
+                           String('`if` form accepts exactly 3 arguments; {} given.'.format(len(sexp) - 1)),
+                           Symbol(':form'),
+                           sexp]))
 
     cond = eval(sexp[1], env)
+
+    if isinstance(cond, Error):
+        return cond
+
     if cond == Bool(True):
         return eval(sexp[2], env)
     elif cond == Bool(False):
         return eval(sexp[3], env)
     else:
-        raise EvalError('`if` condition can only be a boolean; got a {}.'.format(type(cond)), sexp[1])
+        return Error(Symbol(':type-error'),
+                     List([Symbol(':msg'),
+                           String('`if` condition can only be a boolean; got a {}.'.format(type(cond))),
+                           Symbol(':form'),
+                           sexp[1]]))
 
 def eval_quote(sexp, env):
     assert sexp[0].name == 'quote'
     if len(sexp) != 2:
-        raise EvalError('`if` form accepts exactly 1 argument; {} given.'.format(len(sexp) - 1), sexp)
+        return Error(Symbol(':arg-error'),
+                     List([Symbol(':msg'),
+                           String('`quote` form accepts exactly one argument; got a {}.'.format(len(sexp) - 1)),
+                           Symbol(':form'),
+                           sexp]))
     return sexp[1]
 
 def eval_typeof(sexp, env):
     assert sexp[0].name == 'typeof'
     if len(sexp) != 2:
-        raise EvalError('`typeof` form accepts exactly 1 argument; {} given.'.format(len(sexp) - 1), sexp)
+        return create_error(':arg-error',
+                            ':msg', '`typeof` form accepts exactly 1 argument; {} given.'.format(len(sexp) - 1),
+                            ':form', sexp)
 
     val = eval(sexp[1], env)
     val_type = {List: Symbol('list'),
+                Error: Symbol('error'),
                 Symbol: Symbol('symbol'),
                 Function: Symbol('function'),
                 Macro: Symbol('macro'),
@@ -329,39 +369,71 @@ def eval_typeof(sexp, env):
 def eval_first(sexp, env):
     assert sexp[0].name == 'first'
     if len(sexp) != 2:
-        raise EvalError('`first` form accepts exactly 1 argument; {} given.'.format(len(sexp) - 1), sexp)
+        return create_error(':arg-error',
+                            ':msg', '`first` form accepts exactly 1 argument; {} given.'.format(len(sexp) - 1),
+                            ':form', sexp)
     ret = eval(sexp[1], env)
+    if isinstance(ret, Error):
+        return ret
     if type(ret) != List:
-        raise EvalError('`first` argument must be a list.', sexp[1])
+        return create_error(':type-error',
+                            ':msg', '`first` argument must be a list.',
+                            ':form', sexp[1])
     if ret == []:
-        raise EvalError('`first` argument cannot be an empty list.', sexp[1])
+        return create_error(':value-error',
+                            ':msg', '`first` argument cannot be an empty list.',
+                            ':form', sexp[1])
     return ret[0]
 
 def eval_rest(sexp, env):
     assert sexp[0].name == 'rest'
     if len(sexp) != 2:
-        raise EvalError('`rest` form accepts exactly 1 argument; {} given.'.format(len(sexp) - 1), sexp)
+        return create_error(':arg-error',
+                            ':msg', '`rest` form accepts exactly 1 argument; {} given.'.format(len(sexp) - 1),
+                            ':form', sexp)
     ret = eval(sexp[1], env)
+    if type(ret) == Error:
+        return ret
     if type(ret) != List:
-        raise EvalError('`rest` argument must be a list.', sexp)
+        return create_error(':type-error',
+                            ':msg', '`rest` argument must be a list.',
+                            ':form', sexp)
     return ret[1:]
 
 def eval_prep(sexp, env):
     assert sexp[0].name == 'prep'
     if len(sexp) != 3:
-        raise EvalError('`prep` form accepts exactly 2 argument; {} given.'.format(len(sexp) - 1), sexp)
+        return create_error(':arg-error',
+                            ':msg', '`prep` form accepts exactly 2 argument; {} given.'.format(len(sexp) - 1),
+                            ':form', sexp)
     first = eval(sexp[1], env)
     rest = eval(sexp[2], env)
+    if isinstance(first, Error):
+        return first
+    if isinstance(rest, Error):
+        return rest
     if type(rest) != List:
-        raise EvalError('`prep` second argument must be a list.', sexp)
+        return create_error(':type-error',
+                            ':msg', '`prep` second argument must be a list.',
+                            ':form', sexp)
     return [first] + rest
 
 def eval_eq(sexp, env):
     assert sexp[0].name == 'eq'
     if len(sexp) != 3:
-        raise EvalError('`first` form accepts exactly 2 argument; {} given.'.format(len(sexp) - 1), sexp)
+        return Error(Symbol(':arg-error'),
+                     List([Symbol(':msg'),
+                           String('`eq` form accepts exactly two arguments; {} given.'.format(len(sexp) - 1)),
+                           Symbol(':form'),
+                           sexp]))
     first = eval(sexp[1], env)
     second = eval(sexp[2], env)
+
+    if isinstance(first, Error):
+        return first
+    elif isinstance(second, Error):
+        return second
+
     if type(first) != List and type(second) != List:
         return Bool(True) if first == second else Bool(False)
     elif first == second == []:
@@ -372,12 +444,24 @@ def eval_eq(sexp, env):
 def eval_apply(sexp, env):
     assert sexp[0].name == 'apply'
     if len(sexp) != 3:
-        raise EvalError('`apply` expects 2 arguments; {} given.'.format(len(sexp) - 1), sexp)
+        return create_error(':arg-error',
+                            ':msg', '`apply` expects 2 arguments; {} given.'.format(len(sexp) - 1),
+                            ':form', sexp)
 
     func = eval(sexp[1], env)
+    if isinstance(func, Error):
+        return func
     if not isinstance(func, Function):
-        raise EvalError('`apply` first argument must be a function; got {}.'.format(func), sexp[1])
+        return create_error(':type-error',
+                            ':msg', '`apply` first argument must be a function; got {}.'.format(func),
+                            ':form', sexp[1])
     args = eval(sexp[2], env)
+    if isinstance(args, Error):
+        return args
+    if not isinstance(args, (list, List)):
+        return create_error(':type-error',
+                            ':msg', 'A list not passed as function argument list.',
+                            ':form', args)
     return func.call(args)
 
 def eval(exp, env):
