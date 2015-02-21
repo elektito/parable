@@ -258,68 +258,54 @@ def macro_expand(exp, env):
 def eval_error(sexp, env):
     assert sexp[0].name == 'error'
     if len(sexp) < 2:
-        return Error(Symbol(':error-error'),
-                     List([Symbol(':msg'),
-                           String('error expects at least one argument; {} given.'.format(len(sexp) - 1)),
-                           Symbol(':form'),
-                           sexp]))
+        return create_error(':error-error',
+                            ':msg', 'error expects at least one argument; {} given.'.format(len(sexp) - 1),
+                            ':form', sexp)
 
     error_type = eval(sexp[1], env)
     if type(error_type) != Symbol:
-        return Error(Symbol(':error-error'),
-                     List([Symbol(':msg'),
-                           String("Invalid error type."),
-                           Symbol(':form'),
-                           sexp[1]]))
+        return create_error(':error-error',
+                            ':msg', 'Invalid error type.',
+                            ':form', sexp[1])
     attrs = sexp[2:]
     return Error(error_type, attrs)
 
 def eval_error_type(sexp, env):
     assert sexp[0].name == 'error-type'
     if len(sexp) != 2:
-        return Error(Symbol(':error-error'),
-                     List([Symbol(':msg'),
-                           String('error-type expects exactly one argument; {} given.'.format(len(sexp) - 1)),
-                           Symbol(':form'),
-                           sexp]))
+        return create_error(':error-error',
+                            ':msg', 'error-type expects exactly one argument; {} given.'.format(len(sexp) - 1),
+                            ':form', sexp)
 
     error = eval(sexp[1], env)
     if type(error) != Error:
-        return Error(Symbol(':error-error'),
-                     List([Symbol(':msg'),
-                           String('error-type argument must be an Error; {} given.'.format(str(type(error)))),
-                           Symbol(':form'),
-                           sexp]))
+        return create_error(':error-error',
+                            ':msg', 'error-type argument must be an Error; {} given.'.format(str(type(error))),
+                            ':form', sexp)
 
     return error.type
 
 def eval_error_attrs(sexp, env):
     assert sexp[0].name == 'error-attrs'
     if len(sexp) != 2:
-        return Error(Symbol(':error-error'),
-                     List([Symbol(':msg'),
-                           String('error-attrs expects exactly one argument; {} given.'.format(len(sexp) - 1)),
-                           Symbol(':form'),
-                           sexp]))
+        return create_error(':error-error',
+                            ':msg', 'error-attrs expects exactly one argument; {} given.'.format(len(sexp) - 1),
+                            ':form', sexp)
 
     error = eval(sexp[1], env)
     if type(error) != Error:
-        return Error(Symbol(':error-error'),
-                     List([Symbol(':msg'),
-                           String('error-attrs argument must be an Error; {} given.'.format(str(type(error)))),
-                           Symbol(':form'),
-                           sexp]))
+        return create_error(':error-error',
+                            ':msg', 'error-attrs argument must be an Error; {} given.'.format(str(type(error))),
+                            ':form', sexp)
 
     return error.attrs
 
 def eval_if(sexp, env):
     assert sexp[0].name == 'if'
     if len(sexp) != 4:
-        return Error(Symbol(':arg-error'),
-                     List([Symbol(':msg'),
-                           String('`if` form accepts exactly 3 arguments; {} given.'.format(len(sexp) - 1)),
-                           Symbol(':form'),
-                           sexp]))
+        return create_error(':arg-error',
+                            ':msg', '`if` form accepts exactly 3 arguments; {} given.'.format(len(sexp) - 1),
+                            ':form', sexp)
 
     cond = eval(sexp[1], env)
 
@@ -331,20 +317,16 @@ def eval_if(sexp, env):
     elif cond == Bool(False):
         return eval(sexp[3], env)
     else:
-        return Error(Symbol(':type-error'),
-                     List([Symbol(':msg'),
-                           String('`if` condition can only be a boolean; got a {}.'.format(type(cond))),
-                           Symbol(':form'),
-                           sexp[1]]))
+        return create_error(':type-error',
+                            ':msg', '`if` condition can only be a boolean; got a {}.'.format(type(cond)),
+                            ':form', sexp[1])
 
 def eval_quote(sexp, env):
     assert sexp[0].name == 'quote'
     if len(sexp) != 2:
-        return Error(Symbol(':arg-error'),
-                     List([Symbol(':msg'),
-                           String('`quote` form accepts exactly one argument; got a {}.'.format(len(sexp) - 1)),
-                           Symbol(':form'),
-                           sexp]))
+        return create_error(':arg-error',
+                            ':msg', '`quote` form accepts exactly one argument; got a {}.'.format(len(sexp) - 1),
+                            ':form', sexp)
     return sexp[1]
 
 def eval_typeof(sexp, env):
@@ -421,11 +403,9 @@ def eval_prep(sexp, env):
 def eval_eq(sexp, env):
     assert sexp[0].name == 'eq'
     if len(sexp) != 3:
-        return Error(Symbol(':arg-error'),
-                     List([Symbol(':msg'),
-                           String('`eq` form accepts exactly two arguments; {} given.'.format(len(sexp) - 1)),
-                           Symbol(':form'),
-                           sexp]))
+        return create_error(':arg-error',
+                            ':msg', '`eq` form accepts exactly two arguments; {} given.'.format(len(sexp) - 1),
+                            ':form', sexp)
     first = eval(sexp[1], env)
     second = eval(sexp[2], env)
 

@@ -328,19 +328,19 @@ class ParableCoreTest(unittest.TestCase):
     def test_error(self):
         exp = '(error :foo)'
         result = eval_str(exp)
-        self.assertEqual(result, Error(Symbol(':foo'), List()))
+        self.assertEqual(result, create_error(':foo'))
 
         exp = '(error :foo 1 :sym "foo")'
         result = eval_str(exp)
-        self.assertEqual(result, Error(Symbol(':foo'), List([1, Symbol('sym'), String('foo')])))
+        self.assertEqual(result, create_error(':foo'))
 
         exp = '(error "foo")'
         result = eval_str(exp)
-        self.assertEqual(result, Error(Symbol(':error-error'), List()))
+        self.assertEqual(result, create_error(':error-error'))
 
         exp = '(error)'
         result = eval_str(exp)
-        self.assertEqual(result, Error(Symbol(':error-error'), List()))
+        self.assertEqual(result, create_error(':error-error'))
 
     def test_error_type(self):
         exp = '(error-type (error :foo))'
@@ -649,8 +649,8 @@ class ParableUtilsTest(unittest.TestCase):
         self.assertEqual(pprint(Function(List([Symbol('x')]), 10, {})), '(fn (x) 10)')
         self.assertEqual(pprint(Macro(List(), 10, {})), '(mac () 10)')
         self.assertEqual(pprint(Macro(List([Symbol('x')]), 10, {})), '(mac (x) 10)')
-        self.assertEqual(pprint(Error(Symbol(':foo'), List())), '(error :foo)')
-        self.assertEqual(pprint(Error(Symbol(':foo'), List([Symbol(':a'), Integer(10)]))), '(error :foo :a 10)')
+        self.assertEqual(pprint(create_error(':foo')), '(error :foo)')
+        self.assertEqual(pprint(create_error(':foo', ':a', 10)), '(error :foo :a 10)')
 
 class ErrorTest(unittest.TestCase):
     def test_create_error(self):
