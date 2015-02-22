@@ -70,6 +70,12 @@
 (defun ffirst (lst)
   (first (first lst)))
 
+(defun frest (lst)  ;;;;;;;;;;;;
+  (first (rest lst)))
+
+(defun rrest (lst) ;;;;;;;;;;;;
+  (rest (rest lst)))
+
 (defun rfirst (lst)
   (rest (first lst)))
 
@@ -158,3 +164,10 @@
 
 (defun eval (form)
   ((mac () form)))
+
+(defun assoc (key alist)
+  (cond ((atom alist) :#ERROR-INVALID#:)
+        ((null alist) :#ERROR-NOT-FOUND#:)
+        ((null (rest alist)) :#ERROR-INVALID#:)
+        ((= (first alist) key) (frest alist))
+        (#t (assoc key (rrest alist)))))
