@@ -89,6 +89,16 @@
 (= (rfirst '((1 2) 3 4))
    '(2))
 
+;; last
+(= (last '(1 2 3))
+   3)
+(= (last '(:foo))
+   :foo)
+(= (last nil)
+   :#ERROR#:)
+(= (last 1)
+   :#ERROR#:)
+
 ;; firsts
 (= (firsts '((1 2 3) (x y z)))
    '(1 x))

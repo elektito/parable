@@ -79,6 +79,12 @@
 (defun rfirst (lst)
   (rest (first lst)))
 
+(defun last (lst)
+  (cond ((atom lst) :#ERROR#:)
+        ((null lst) :#ERROR#:)
+        ((null (rest lst)) (first lst))
+        (#t (last (rest lst)))))
+
 (defun firsts (lists)
   (mapf first lists))
 
