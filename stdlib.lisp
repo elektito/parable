@@ -85,6 +85,12 @@
         ((null (rest lst)) (first lst))
         (#t (last (rest lst)))))
 
+(defun butlast (lst)
+  (cond ((atom lst) :#ERROR#:)
+        ((null lst) :#ERROR#:)
+        ((null (rest lst)) nil)
+        (#t (prep (first lst) (butlast (rest lst))))))
+
 (defun firsts (lists)
   (mapf first lists))
 

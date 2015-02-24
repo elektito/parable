@@ -99,6 +99,16 @@
 (= (last 1)
    :#ERROR#:)
 
+;; butlast
+(= (butlast '(1 2 3))
+   '(1 2))
+(= (butlast '(:foo))
+   nil)
+(= (butlast nil)
+   :#ERROR#:)
+(= (butlast 1)
+   :#ERROR#:)
+
 ;; firsts
 (= (firsts '((1 2 3) (x y z)))
    '(1 x))
