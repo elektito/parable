@@ -70,10 +70,10 @@
 (defun ffirst (lst)
   (first (first lst)))
 
-(defun frest (lst)  ;;;;;;;;;;;;
+(defun frest (lst)
   (first (rest lst)))
 
-(defun rrest (lst) ;;;;;;;;;;;;
+(defun rrest (lst)
   (rest (rest lst)))
 
 (defun rfirst (lst)
