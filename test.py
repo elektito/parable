@@ -1,5 +1,5 @@
 import parable
-from parable import Error, Symbol, Function, Macro, List, Bool, Integer, String, EvalError, create_error
+from parable import Error, Symbol, Function, Macro, List, Bool, Integer, String, create_error
 from read import Reader, ReadError, EofReadError
 from pprint import pprint
 
@@ -362,8 +362,8 @@ class ParableCoreTest(unittest.TestCase):
         self.assertEqual(result, Symbol('b'))
 
         exp = "(if nil 'a 'b)"
-        with self.assertRaises(EvalError):
-            result = eval_str(exp)
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
 
     def test_quote(self):
         exp = '(quote x)'
@@ -460,6 +460,24 @@ class ParableCoreTest(unittest.TestCase):
         result = eval_str(exp)
         self.assertEqual(result, True)
 
+    def test_fn(self):
+        exp = '(fn)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':form-error'))
+
+        exp = '(fn ())'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':form-error'))
+
+    def test_mac(self):
+        exp = '(mac)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':form-error'))
+
+        exp = '(mac ())'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':form-error'))
+
     def test_apply(self):
         exp = "(apply (fn (x y) (prep y (prep x '()))) '(10 20))"
         result = eval_str(exp)
@@ -478,18 +496,93 @@ class ParableCoreTest(unittest.TestCase):
         result = eval_str(exp)
         self.assertEqual(result, Symbol('b'))
 
-    def test_bad_parameter_list(self):
-        with self.assertRaises(EvalError):
-            exp = '(fn (x x) x)'
-            result = eval_str(exp)
+    def test_duplicate_function_parameter_list(self):
+        exp = '(fn (x x) x)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':param-error'))
 
-        with self.assertRaises(EvalError):
-            exp = '(fn (x y x) x)'
-            result = eval_str(exp)
+        exp = '(fn (x y x) x)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':param-error'))
 
-        with self.assertRaises(EvalError):
-            exp = '(fn (x y & y) x)'
-            result = eval_str(exp)
+        exp = '(fn (x y & y) x)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':param-error'))
+
+    def test_duplicate_macro_parameter_list(self):
+        exp = '(mac (x x) x)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':param-error'))
+
+        exp = '(mac (x y x) x)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':param-error'))
+
+        exp = '(mac (x y & y) x)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':param-error'))
+
+        exp = '(mac (x (y z) & y) x)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':param-error'))
+
+        exp = '(mac (x (y y) z) x)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':param-error'))
+
+        exp = '(mac (x (a (y y) b) z) x)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':param-error'))
+
+    def test_non_list_function_parameter_list(self):
+        exp = '(fn 1 x)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':param-error'))
+
+        exp = '(fn x x)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':param-error'))
+
+        exp = '(fn "()" x)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':param-error'))
+
+    def test_non_list_macro_parameter_list(self):
+        exp = '(mac 1 x)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':param-error'))
+
+        exp = '(mac x x)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':param-error'))
+
+        exp = '(mac "()" x)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':param-error'))
+
+    def test_invalid_function_rest_paramter(self):
+        exp = '(fn (x & y z) x)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':param-error'))
+
+    def test_more_than_one_rest_parameter_in_function(self):
+        exp = '(fn (x & y & z) x)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':param-error'))
+
+    def test_invalid_macro_rest_paramter(self):
+        exp = '(mac (x & y z) x)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':param-error'))
+
+    def test_more_than_one_rest_parameter_in_macro(self):
+        exp = '(mac (x & y & z) x)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':param-error'))
+
+        exp = '(mac (x (h & y & z) g) x)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':param-error'))
 
     def test_nested_function_call(self):
         list_func = '(fn (& r) r)'
@@ -511,18 +604,18 @@ class ParableCoreTest(unittest.TestCase):
 
     def test_too_many_arguments_to_function(self):
         exp = "((fn (x) x) 1 2)"
-        with self.assertRaises(EvalError):
-            result = eval_str(exp)
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
 
     def test_too_few_arguments_to_function(self):
         exp = "((fn (x y) x) 1)"
-        with self.assertRaises(EvalError):
-            result = eval_str(exp)
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
 
     def test_too_few_arguments_to_function_with_rest(self):
         exp = "((fn (x & y) x))"
-        with self.assertRaises(EvalError):
-            result = eval_str(exp)
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
 
     def test_macro_call(self):
         exp = "((mac (a b c) b) (a b) (if #t 'a 'b) (p q))"
@@ -545,18 +638,18 @@ class ParableCoreTest(unittest.TestCase):
 
     def test_too_many_arguments_to_macro(self):
         exp = "((mac (x) x) 1 2)"
-        with self.assertRaises(EvalError):
-            result = eval_str(exp)
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
 
     def test_too_few_arguments_to_macro(self):
         exp = "((mac (x y) x) 1)"
-        with self.assertRaises(EvalError):
-            result = eval_str(exp)
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
 
     def test_too_few_arguments_to_macro_with_rest(self):
         exp = "((mac (x & y) x))"
-        with self.assertRaises(EvalError):
-            result = eval_str(exp)
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
 
     def test_lexical_scope(self):
         # first create a function that returns the value of a symbol x

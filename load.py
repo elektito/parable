@@ -1,6 +1,7 @@
-from parable import Symbol, eval as eval_form, EvalError, macro_expand, List
+from parable import Symbol, eval as eval_form, macro_expand, List, Error
 from read import Reader, ReadError, EofReadError
 from pprint import pprint
+from util import InvalidAssocList, assoc
 
 class LoadWarning(RuntimeWarning):
     def __init__(self, msg, form):
@@ -13,6 +14,9 @@ class LoadError(RuntimeError):
         self.form = form
 
 def display_form(form, context):
+    if form.filename == '<string>':
+        return
+
     with open(form.filename) as f:
         all_lines = f.readlines()
 
@@ -30,7 +34,7 @@ def display_form(form, context):
     if not context:
         pass
     elif form.end_row == len(all_lines) - 2:
-        lines.append((len(all_lines - 2), all_lines[-2]))
+        lines.append((len(all_lines) - 1, all_lines[-1]))
     elif form.end_row < len(all_lines) - 2:
         lines.extend([(form.end_row + 1, all_lines[form.end_row + 1]),
                       (form.end_row + 2, all_lines[form.end_row + 2])])
@@ -71,7 +75,7 @@ def display_form(form, context):
             '{CODE_COLOR}{first_part}{HIGHLIGHT_COLOR}' \
             '{second_part}{CODE_COLOR}{third_part}{END_COLOR}'.format(**dict(d, **d2))
 
-def print_error(e):
+def print_exception(e):
     if not hasattr(e, 'form') or \
        not all(hasattr(e.form, a) for a in ['start_row',
                                             'start_col',
@@ -86,6 +90,25 @@ def print_error(e):
 
     display_form(e.form, True)
 
+def print_error(e):
+    try:
+        msg = assoc(e.attrs, Symbol(':msg'))
+    except (KeyError, InvalidAssocKey):
+        msg = ''
+
+    try:
+        form = assoc(e.attrs, Symbol(':form'))
+    except (KeyError, InvalidAssocKey):
+        form = None
+
+    if msg:
+        print 'Error of type "{}": {}'.format(e.type.name, msg)
+    else:
+        print 'Error of type "{}".'.format(e.type.name)
+
+    if form:
+        display_form(form, True)
+
 def run_tests(f, filename, env):
     passed = 0
     failed = 0
@@ -98,23 +121,31 @@ def run_tests(f, filename, env):
         if form == None:
             break
 
-        try:
-            result = eval_form(form, env)
-            if result == False:
-                failed += 1
-                print 'Test failed:'
-                display_form(form, False)
-            elif result == True:
-                passed += 1
-                print 'Test passed.'
-            else:
-                error += 1
-                print 'Test cases must return either #t or #f; got {}.'.format(result)
-                display_form(form, False)
-        except EvalError as e:
-            print 'Test error:', e
+        result = eval_form(form, env)
+        if result == False:
+            failed += 1
+            print 'Test failed:'
             display_form(form, False)
+        elif result == True:
+            passed += 1
+            print 'Test passed.'
+        elif isinstance(result, Error):
             error += 1
+
+            try:
+                print 'Test error:', assoc(result, Symbol(':msg'))
+            except KeyError:
+                print 'Test error.'
+
+            try:
+                form = assoc(result, Symbol(':form'))
+                display_form(form, False)
+            except KeyError:
+                print 'No location information for the error.'
+        else:
+            error += 1
+            print 'Test cases must return either #t or #f; got {}.'.format(result)
+            display_form(form, False)
 
     return passed, failed, error
 
@@ -134,7 +165,11 @@ def load(f, filename, env):
         if type(expanded[1]) != Symbol:
             raise LoadError('Invalid top-level form.', form)
 
-        env[expanded[1]] = eval_form(expanded[2], env)
+        val = eval_form(expanded[2], env)
+        if isinstance(val, Error):
+            print_error(val)
+            exit(2)
+        env[expanded[1]] = val
 
     return env
 
@@ -175,23 +210,29 @@ def main():
             try:
                 env.update(load(f, lib, env))
             except (LoadError, LoadWarning) as e:
-                print_error(e)
+                print_exception(e)
                 exit(2)
 
     if args.eval_expression:
         try:
             form = Reader(args.eval_expression, '<string>').read()
             result = eval_form(form, env)
-        except (ReadError, EvalError) as e:
-            print_error(e)
+        except ReadError as e:
+            print_exception(e)
+            exit(2)
+        if isinstance(result, Error):
+            print_error(result)
             exit(2)
         print 'Evaluation Result:', pprint(result)
     elif args.expand_expression:
         try:
             form = Reader(args.expand_expression, '<string>').read()
             result = macro_expand(form, env)
-        except (ReadError, EvalError) as e:
-            print_error(e)
+        except ReadError as e:
+            print_exception(e)
+            exit(2)
+        if isinstance(result, Error):
+            print_error(result)
             exit(2)
         print 'Macro Expansion Result:', result[1], pprint(result[0])
     elif args.test_files:
@@ -204,7 +245,7 @@ def main():
                     failed += f
                     error += e
             except ReadError as e:
-                print_error(e)
+                print_exception(e)
                 exit(2)
 
         print 'Total tests:', passed + failed + error

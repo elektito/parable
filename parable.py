@@ -1,9 +1,14 @@
 from cStringIO import StringIO
 
-class EvalError(RuntimeError):
+class ParamError(RuntimeError):
     def __init__(self, msg, form):
         self.form = form
-        super(EvalError, self).__init__(msg)
+        super(ParamError, self).__init__(msg)
+
+class ArgError(RuntimeError):
+    def __init__(self, msg, form):
+        self.form = form
+        super(ArgError, self).__init__(msg)
 
 class Error(object):
     def __init__(self, type, attrs):
@@ -49,19 +54,31 @@ class Symbol(object):
     def __repr__(self):
         return '<Symbol "{}">'.format(self.name)
 
+def check_rest_parameters(params):
+    if params.count(Symbol('&')) > 1:
+        raise ParamError('More than one "&" in the argument list.', params)
+    if Symbol('&') in params:
+        if params.index(Symbol('&')) != len(params) - 2:
+            raise ParamError('Rest argument not at the end of the list.', params)
+    for p in params:
+        if isinstance(p, list):
+            check_rest_parameters(p)
+
 class Function(object):
     def __init__(self, params, body, env):
         if type(params) != List:
-            raise EvalError('Invalid argument list; not a list.', params)
+            raise ParamError('Invalid argument list; not a list.', params)
 
         if any(type(i) != Symbol for i in params):
-            raise EvalError(
+            raise ParamError(
                 'Function parameter list should only contain symbols.',
                 params)
 
+        check_rest_parameters(params)
+
         # check if the parameter list is duplicate free
         if len(params) != len(set(params)):
-            raise EvalError('Duplicate parameters.', params)
+            raise ParamError('Duplicate parameters.', params)
 
         self.params = params
         self.body = body
@@ -99,11 +116,38 @@ class Function(object):
 class Macro(object):
     def __init__(self, params, body, env):
         if type(params) != List:
-            raise EvalError('Invalid argument list; not a list.', params)
+            raise ParamError('Invalid parameter list; not a list.', params)
+
+        self.check_params(params)
 
         self.params = params
         self.body = body
         self.env = env
+
+    def check_params(self, params):
+        def flatten(l, acc=[]):
+            for i in l:
+                if isinstance(i, list):
+                    flatten(i, acc)
+                else:
+                    acc.append(i)
+            return acc
+
+        if not isinstance(params, List):
+            raise InvalidParameterList(
+                'Parameter list must be a List not a {}.', type(params).__name__)
+
+        check_rest_parameters(params)
+
+        oparams = params
+        params = flatten(params)
+        if not all(isinstance(i, Symbol) for i in params):
+            raise InvalidParameterList(
+                'Parameters must be symbols.')
+        params = [i for i in params if i.name != '&']
+
+        if len(params) != len(set(params)):
+            raise ParamError('Duplicate parameters.', oparams)
 
     def expand(self, args):
         extra_env = destructure(self.params, args)
@@ -197,25 +241,25 @@ class String(str):
 
 def destructure(params, args):
     if type(params) == List and type(args) != List:
-        raise EvalError('Parameter list and the provided arguments do not match.\n'
-                        '    Expected a list in the arguments, got: {}'
-                        .format(args),
-                        args)
+        raise ArgError('Parameter list and the provided arguments do not match.\n'
+                       '    Expected a list in the arguments, got: {}'
+                       .format(args),
+                       args)
 
     if len(params) >= 2 and params[-2] == Symbol('&'):
         if len(args) < len(params) - 2:
-            raise EvalError('Parameter list and the provided arguments do not match.\n'
-                            '    Expected at least {} argument(s) but got {}.'
-                            .format(len(params) - 2, len(args)),
-                            args)
+            raise ArgError('Parameter list and the provided arguments do not match.\n'
+                           '    Expected at least {} argument(s) but got {}.'
+                           .format(len(params) - 2, len(args)),
+                           args)
 
         args = args[:len(params) - 2] + [args[len(params) - 2:]]
         params = params[:-2] + params[-1:]
     elif len(params) != len(args):
-        raise EvalError('Parameter list and the provided arguments do not match.\n'
-                        '    Expected {} argument(s) but got {}.'
-                        .format(len(params), len(args)),
-                        args)
+        raise ArgError('Parameter list and the provided arguments do not match.\n'
+                       '    Expected {} argument(s) but got {}.'
+                       .format(len(params), len(args)),
+                       args)
 
     env = {}
     for p, a in zip(params, args):
@@ -224,7 +268,7 @@ def destructure(params, args):
         elif type(p) == List:
             env.update(destructure(p, a))
         else:
-            raise EvalError('Only symbols and lists allowed in parameter list; got a {}.'.format(type(p)), p)
+            raise ParamError('Only symbols and lists allowed in parameter list; got an {} instead.'.format(type(p).__name__), p)
 
     return env
 
@@ -232,9 +276,8 @@ def macro_expand_1(exp, env):
     if type(exp) != List or len(exp) == 0:
         return exp, False
 
-    try:
-        macro = eval(exp[0], env)
-    except EvalError:
+    macro = eval(exp[0], env)
+    if isinstance(macro, Error):
         return exp, False
 
     if not isinstance(macro, Macro):
@@ -318,14 +361,14 @@ def eval_if(sexp, env):
         return eval(sexp[3], env)
     else:
         return create_error(':type-error',
-                            ':msg', '`if` condition can only be a boolean; got a {}.'.format(type(cond)),
+                            ':msg', '`if` condition can only be a boolean; got a {} instead.'.format(type(cond).__name__),
                             ':form', sexp[1])
 
 def eval_quote(sexp, env):
     assert sexp[0].name == 'quote'
     if len(sexp) != 2:
         return create_error(':arg-error',
-                            ':msg', '`quote` form accepts exactly one argument; got a {}.'.format(len(sexp) - 1),
+                            ':msg', '`quote` form accepts exactly one argument; got {} instead.'.format(len(sexp) - 1),
                             ':form', sexp)
     return sexp[1]
 
@@ -459,7 +502,9 @@ def eval(exp, env):
         return exp
 
     if exp not in env:
-        raise EvalError('Undefined variable: {}'.format(exp.name), exp)
+        return create_error(':variable-error',
+                            ':msg', 'Unbound variable: {}'.format(exp.name),
+                            ':form', exp)
 
     return env[exp]
 
@@ -471,12 +516,26 @@ def eval_sexp(sexp, env):
 
     if first == Symbol('fn'):
         if len(sexp) != 3:
-            raise EvalError('Invalid fn expression.', exp)
-        return Function(sexp[1], sexp[2], env)
+            return create_error(':form-error',
+                                ':msg', 'Invalid fn expression.',
+                                ':form', sexp)
+        try:
+            return Function(sexp[1], sexp[2], env)
+        except ParamError as e:
+            return create_error(':param-error',
+                                ':msg', str(e),
+                                ':form', sexp[1])
     if first == Symbol('mac'):
         if len(sexp) != 3:
-            raise EvalError('Invalid mac expression.', exp)
-        return Macro(sexp[1], sexp[2], env)
+            return create_error(':form-error',
+                                ':msg', 'Invalid mac expression.',
+                                ':form', sexp)
+        try:
+            return Macro(sexp[1], sexp[2], env)
+        except ParamError as e:
+            return create_error(':param-error',
+                                ':msg', 'Invalid macro parameter list: ' + str(e),
+                                ':form', sexp[1])
 
     map = {Symbol('if'): eval_if,
            Symbol('quote'): eval_quote,
@@ -497,7 +556,9 @@ def eval_sexp(sexp, env):
 
     first = eval(sexp[0], env)
     if not isinstance(first, (Function, Macro)):
-        raise EvalError('Not a function or a macro: {}'.format(first), first)
+        return create_error(':value-error',
+                            ':msg', 'Not a function or a macro: {}'.format(first),
+                            ':form', sexp[0])
 
     args = List(sexp[1:])
     args.filename = sexp.filename
@@ -524,11 +585,16 @@ def eval_sexp(sexp, env):
         return first.call(args)
     elif isinstance(first, Macro):
         # now expand the macro.
-        expanded = first.expand(args)
+        try:
+            expanded = first.expand(args)
+        except ArgError:
+            return create_error(':arg-error',
+                                ':msg', 'Argument list does not match parameter list.',
+                                ':form', args)
 
         # evaluate the result of expansion.
         return eval(expanded, env)
     else:
-        raise EvalError('Expected a macro or a function, got: {}'
-                        .format(first),
-                        first)
+        return create_error(':value-error',
+                            ':msg', 'Expected a macro or a function, got: {}'.format(first),
+                            ':form', first)
