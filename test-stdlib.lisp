@@ -78,6 +78,16 @@
 (= (remove-if null nil)
    nil)
 
+;; remove
+(= (remove 1 '(1 2 1 3 4 1 1 5))
+   '(2 3 4 5))
+(= (remove 10 '(1 2 3))
+   '(1 2 3))
+(= (remove 1 '(1 1))
+   nil)
+(= (remove 10 nil)
+   nil)
+
 ;; second
 (= (second '(1 2 3)) 2)
 

@@ -183,3 +183,10 @@
         ((null (rest alist)) :#ERROR-INVALID#:)
         ((= (first alist) key) (frest alist))
         (#t (assoc key (rrest alist)))))
+
+(defun remove (item lst)
+  (if (null lst)
+      nil
+      (if (= item (first lst))
+          (remove item (rest lst))
+          (prep (first lst) (remove item (rest lst))))))
