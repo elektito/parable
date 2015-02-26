@@ -73,7 +73,7 @@ class Function(object):
             return create_error(':arg-error',
                                 ':msg', 'Function argument list not a List.',
                                 ':form', args)
-        args = List(args) if isinstance(args, list) else args
+        args = List(args) if not isinstance(args, List) else args
 
         if len(params) >= 2 and params[-2] == Symbol('&'):
             if len(args) < len(params) - 2:
@@ -519,7 +519,12 @@ def eval_sexp(sexp, env):
     if not isinstance(first, (Function, Macro)):
         raise EvalError('Not a function or a macro: {}'.format(first), first)
 
-    args = sexp[1:]
+    args = List(sexp[1:])
+    args.filename = sexp.filename
+    args.start_row = sexp.start_row
+    args.start_col = sexp.start_col
+    args.end_row = sexp.end_row
+    args.end_col = sexp.end_col
 
     if isinstance(first, Function):
         # evaluate arguments.
