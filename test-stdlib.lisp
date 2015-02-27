@@ -235,3 +235,13 @@
    :#ERROR-INVALID#:)
 (= (assoc :foo :foo)
    :#ERROR-INVALID#:)
+
+;; try
+(= (try (error :value-error) (:value-error 10) (:type-error 20))
+   10)
+(= (try (error :type-error) (:value-error 10) (:type-error 20))
+   20)
+(let ((it (try (error :foo-error) (:value-error 10) (:type-error 20))))
+  (= (error-type it) :catch-error))
+(= (try 1800 (:value-error 10) (:value-error 20))
+   1800)
