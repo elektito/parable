@@ -133,14 +133,15 @@ def run_tests(f, filename, env):
             error += 1
 
             try:
-                print 'Test error:', assoc(result, Symbol(':msg'))
-            except KeyError:
-                print 'Test error.'
+                desc = assoc(result.attrs, Symbol(':msg'))
+                print 'Test error ({}): {}'.format(result.type.name, desc)
+            except (KeyError, InvalidAssocList) as e:
+                print 'Test error ({}).'.format(result.type.name)
 
             try:
                 form = assoc(result, Symbol(':form'))
                 display_form(form, False)
-            except KeyError:
+            except (KeyError, InvalidAssocList):
                 print 'No location information for the error.'
         else:
             error += 1
