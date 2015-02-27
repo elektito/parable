@@ -501,6 +501,8 @@ def eval(exp, env):
         return exp
     elif type(exp) == Bool:
         return exp
+    elif type(exp) == Error:
+        return exp
     elif exp == Symbol('nil'):
         return List()
     elif type(exp) == Symbol and exp.name.startswith(':'):
