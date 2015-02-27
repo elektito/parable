@@ -9,7 +9,7 @@ def pprint_error(form):
         return '(error {})'.format(form.type.name)
 
 def pprint_bool(form):
-    return '#t' if form else '#f'
+    return '#t' if form == True else '#f'
 
 def pprint_symbol(form):
     return form.name
