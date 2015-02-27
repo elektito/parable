@@ -93,12 +93,12 @@ def print_exception(e):
 def print_error(e):
     try:
         msg = assoc(e.attrs, Symbol(':msg'))
-    except (KeyError, InvalidAssocKey):
+    except (KeyError, InvalidAssocList):
         msg = ''
 
     try:
         form = assoc(e.attrs, Symbol(':form'))
-    except (KeyError, InvalidAssocKey):
+    except (KeyError, InvalidAssocList):
         form = None
 
     if msg:
