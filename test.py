@@ -732,22 +732,45 @@ class ParableUtilsTest(unittest.TestCase):
         self.assertFalse(expanded)
         self.assertEqual(result, 1000)
 
-    def test_pprint(self):
+class PrettyPrintTest(unittest.TestCase):
+    def test_pprint_nil(self):
         self.assertEqual(pprint([]), 'nil')
+
+    def test_pprint_symbol(self):
         self.assertEqual(pprint(Symbol('foo')), 'foo')
+
+    def test_pprint_string(self):
         self.assertEqual(pprint(String("foo")), '"foo"')
         self.assertEqual(pprint(String('sth "sth" sth')), '"sth \\"sth\\" sth"')
+
+    def test_pprint_boolean(self):
         self.assertEqual(pprint(True), '#t')
         self.assertEqual(pprint(False), '#f')
+
+    def test_pprint_integer(self):
         self.assertEqual(pprint(Integer(1018)), '1018')
+
+    def test_pprint_quote(self):
         self.assertEqual(pprint([Symbol('quote'), Symbol('foo')]), "'foo")
+
+    def test_pprint_backquote(self):
         self.assertEqual(pprint([Symbol('backquote'), Symbol('x')]), '`x')
+
+    def test_pprint_unquote(self):
         self.assertEqual(pprint([Symbol('unquote'), Symbol('x')]), ',x')
+
+    def test_pprint_unquote_splicing(self):
         self.assertEqual(pprint([Symbol('unquote-splicing'), Symbol('x')]), ',@x')
+
+    def test_pprint_function(self):
         self.assertEqual(pprint(Function(List(), 10, {})), '(fn () 10)')
         self.assertEqual(pprint(Function(List([Symbol('x')]), 10, {})), '(fn (x) 10)')
+
+    def test_pprint_macro(self):
         self.assertEqual(pprint(Macro(List(), 10, {})), '(mac () 10)')
         self.assertEqual(pprint(Macro(List([Symbol('x')]), 10, {})), '(mac (x) 10)')
+
+    def test_pprint_error(self):
         self.assertEqual(pprint(create_error(':foo')), '(error :foo)')
         self.assertEqual(pprint(create_error(':foo', ':a', 10)), '(error :foo :a 10)')
 
