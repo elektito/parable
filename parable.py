@@ -310,7 +310,12 @@ def eval_error(sexp, env):
         return create_error(':error-error',
                             ':msg', 'Invalid error type.',
                             ':form', sexp[1])
-    attrs = sexp[2:]
+    attrs = List(eval(i, env) for i in sexp[2:])
+    attrs.filename = sexp.filename
+    attrs.start_row = sexp.start_row
+    attrs.start_col = sexp.start_col
+    attrs.end_row = sexp.end_row
+    attrs.end_col = sexp.end_col
     return Error(error_type, attrs)
 
 def eval_error_type(sexp, env):
