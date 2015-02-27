@@ -150,8 +150,13 @@ class Macro(object):
             raise ParamError('Duplicate parameters.', oparams)
 
     def expand(self, args):
-        extra_env = destructure(self.params, args)
-        return eval(self.body, dict(self.env, **extra_env))
+        try:
+            extra_env = destructure(self.params, args)
+            return eval(self.body, dict(self.env, **extra_env))
+        except ArgError as e:
+            return create_error(':arg-error',
+                                ':msg', str(e),
+                                ':form', args)
 
     def __repr__(self):
         return '<Macro params={} body={}>'.format(self.params, self.body)
@@ -286,7 +291,10 @@ def macro_expand_1(exp, env):
     args = exp[1:]
     expanded = macro.expand(args)
 
-    return expanded, True
+    if isinstance(expanded, Error):
+        return expanded, False
+    else:
+        return expanded, True
 
 def macro_expand(exp, env):
     result, is_expanded = macro_expand_1(exp, env)

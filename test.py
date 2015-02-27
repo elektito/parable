@@ -732,6 +732,13 @@ class ParableUtilsTest(unittest.TestCase):
         self.assertFalse(expanded)
         self.assertEqual(result, 1000)
 
+    def test_macro_expand_arg_error(self):
+        exp = "((mac () x) 10)"
+        exp = read_str(exp)
+        result, expanded = parable.macro_expand_1(exp, {})
+        self.assertEqual(result, create_error(':arg-error'))
+        self.assertEqual(expanded, False)
+
 class PrettyPrintTest(unittest.TestCase):
     def test_pprint_nil(self):
         self.assertEqual(pprint([]), 'nil')
