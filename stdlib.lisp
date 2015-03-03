@@ -209,3 +209,12 @@
            (cond ,@(construct-try-clauses catch-clauses)
                  (#t (error :catch-error :msg "No catch clause matched." :form catch-clauses))))
          it)))
+
+(defun symbol? (v)
+  (eq (typeof v) 'symbol))
+
+(defun list? (v)
+  (eq (typeof v) 'list))
+
+(defun string? (v)
+  (eq (typeof v) 'str))

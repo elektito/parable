@@ -245,3 +245,36 @@
   (= (error-type it) :catch-error))
 (= (try 1800 (:value-error 10) (:value-error 20))
    1800)
+
+;; symbol?
+(symbol? 'foo)
+(symbol? :bar)
+(not (symbol? 10))
+(not (symbol? "foo"))
+(not (symbol? (fn (x) x)))
+(not (symbol? (mac (x) x)))
+(not (symbol? '(1 2)))
+(not (symbol? nil))
+
+;; list?
+(list? nil)
+(list? '(1))
+(list? '(1 :foo))
+(not (list? 10))
+(not (list? "foo"))
+(not (list? (fn (x) x)))
+(not (list? (mac (x) x)))
+(not (list? 'foo))
+(not (list? :foo))
+
+;; string?
+(string? "")
+(string? "a")
+(string? "foo")
+(not (string? 10))
+(not (string? nil))
+(not (string? '(1 2)))
+(not (string? (fn (x) x)))
+(not (string? (mac (x) x)))
+(not (string? 'foo))
+(not (string? :foo))
