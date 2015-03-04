@@ -1,4 +1,5 @@
 from cStringIO import StringIO
+from util import assoc
 
 class ParamError(RuntimeError):
     def __init__(self, msg, form):
@@ -14,6 +15,12 @@ class Error(object):
     def __init__(self, type, attrs):
         self.type = type
         self.attrs = attrs
+
+        self.start_row = 0
+        self.start_col = 0
+        self.end_row = 0
+        self.end_col = 0
+        self.filename = ''
 
     def __eq__(self, other):
         if type(other) != Error:
@@ -36,7 +43,19 @@ def create_error(typestr, *attrs):
 
     if type(typestr) not in [str, String]:
         raise RuntimeError('Invalid error type.')
-    return process_attrs(attrs, [])
+
+    err = process_attrs(attrs, [])
+    try:
+        form = assoc(err.attrs, Symbol(':form'))
+        err.start_row = form.start_row
+        err.start_col = form.start_col
+        err.end_row = form.end_row
+        err.end_col = form.end_col
+        err.filename = form.filename
+    except:
+        pass
+
+    return err
 
 class Symbol(object):
     def __init__(self, name):
@@ -319,12 +338,15 @@ def eval_error(sexp, env):
                             ':msg', 'Invalid error type.',
                             ':form', sexp[1])
     attrs = List(eval(i, env) for i in sexp[2:])
-    attrs.filename = sexp.filename
-    attrs.start_row = sexp.start_row
-    attrs.start_col = sexp.start_col
-    attrs.end_row = sexp.end_row
-    attrs.end_col = sexp.end_col
-    return Error(error_type, attrs)
+    err = Error(error_type, attrs)
+
+    err.filename = sexp.filename
+    err.start_row = sexp.start_row
+    err.start_col = sexp.start_col
+    err.end_row = sexp.end_row
+    err.end_col = sexp.end_col
+
+    return err
 
 def eval_error_type(sexp, env):
     assert sexp[0].name == 'error-type'

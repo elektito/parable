@@ -99,7 +99,7 @@ def print_error(e):
     try:
         form = assoc(e.attrs, Symbol(':form'))
     except (KeyError, InvalidAssocList):
-        form = None
+        form = e
 
     if msg:
         print 'Error of type "{}": {}'.format(e.type.name, msg)
