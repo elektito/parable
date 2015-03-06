@@ -305,3 +305,13 @@
 (= (- 10 5 3 1) 1)
 (= (- 10 "foo")
    (error :type-error))
+
+;; ++
+(= (++ 10) 11)
+(= (++ "foo")
+   (error :type-error))
+
+;; --
+(= (-- 10) 9)
+(= (-- "foo")
+   (error :type-error))

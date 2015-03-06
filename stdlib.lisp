@@ -268,3 +268,9 @@
         (#t
          (iadd (first values)
                (ineg (apply + (rest values)))))))
+
+(defun ++ (n)
+  (iadd n 1))
+
+(defun -- (n)
+  (iadd n -1))
