@@ -23,6 +23,9 @@ class SymbolTest(unittest.TestCase):
         self.assertEqual(d[Symbol('foo')], 2000)
         self.assertEqual(d[Symbol('bar')], 3000)
 
+    def test_repr(self):
+        self.assertEqual(repr(Symbol('x')), '<Symbol "x">')
+
 class ListTest(unittest.TestCase):
     def setUp(self):
         self.list = List([1, 2, 3, 4, 5])
@@ -53,6 +56,10 @@ class ListTest(unittest.TestCase):
         self.assertEqual(self.list[5:], [])
         self.assertEqual(type(self.list[5:]), List)
 
+    def test_repr(self):
+        self.assertEqual(repr(List([])), 'L[]')
+        self.assertEqual(repr(List([Symbol('x')])), 'L[<Symbol "x">]')
+
 class IntegerTest(unittest.TestCase):
     def test_equality(self):
         self.assertEqual(Integer(1), Integer(1))
@@ -63,6 +70,11 @@ class IntegerTest(unittest.TestCase):
         self.assertEqual(Integer(1) + 1, Integer(2))
         self.assertEqual(1 + Integer(1), Integer(2))
         self.assertEqual(Integer(1) + Integer(1), Integer(2))
+
+    def test_repr(self):
+        self.assertEqual(repr(Integer(10)), 'N10')
+        self.assertEqual(repr(Integer(0)), 'N0')
+        self.assertEqual(repr(Integer(-4)), 'N-4')
 
 class StringTest(unittest.TestCase):
     def test_equality(self):
@@ -77,6 +89,9 @@ class StringTest(unittest.TestCase):
         self.assertTrue(isinstance('foo' + String('bar'), String))
         self.assertEqual(String('foo') + String('bar'), String('foobar'))
         self.assertTrue(isinstance(String('foo') + String('bar'), String))
+
+    def test_repr(self):
+        self.assertEqual(repr(String("foo")), "S'foo'")
 
 def read_str(s):
     return Reader(s, '<string>').read()
@@ -920,6 +935,10 @@ class PrettyPrintTest(unittest.TestCase):
         self.assertEqual(pprint(create_error(':foo', ':a', 10)), '(error :foo :a 10)')
 
 class ErrorTest(unittest.TestCase):
+    def test_repr(self):
+        self.assertEqual(repr(create_error(':foo', ':msg', 10)),
+                         '<Error ":foo" attrs=L[<Symbol ":msg">, 10]>')
+
     def test_create_error(self):
         err = create_error(':foo', ':a', 10, ':b', 20)
         self.assertEqual(err, Error(Symbol(':foo'), []))
