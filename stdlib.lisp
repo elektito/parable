@@ -25,6 +25,21 @@
 (defun apply (func args)
   (apply func args))
 
+(defun iadd (n m)
+  (iadd n m))
+
+(defun imul (n m)
+  (imul n m))
+
+(defun idiv (n m)
+  (idiv n m))
+
+(defun imod (n m)
+  (imod n m))
+
+(defun ineg (n)
+  (ineg n m))
+
 (defun null (v)
   (if (eq v nil) #t #f))
 
