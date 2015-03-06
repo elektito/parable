@@ -498,6 +498,23 @@ def eval_iadd(sexp, env):
 
     return first + second
 
+def eval_ineg(sexp, env):
+    assert sexp[0].name == 'ineg'
+    if len(sexp) != 2:
+        return create_error(':arg-error',
+                            ':msg', '`ineg` form accepts exactly 1 argument; {} given.'.format(len(sexp) - 1),
+                            ':form', sexp)
+
+    first = eval(sexp[1], env)
+
+    if isinstance(first, Error):
+        return first
+
+    if not isinstance(first, Integer):
+        return create_error(':type-error')
+
+    return -first
+
 def eval_eq(sexp, env):
     assert sexp[0].name == 'eq'
     if len(sexp) != 3:
@@ -600,7 +617,8 @@ def eval_sexp(sexp, env):
            Symbol('error-type'): eval_error_type,
            Symbol('error-attrs'): eval_error_attrs,
            Symbol('apply'): eval_apply,
-           Symbol('iadd'): eval_iadd}
+           Symbol('iadd'): eval_iadd,
+           Symbol('ineg'): eval_ineg}
 
     if type(first) == Symbol and first in map:
         return map[first](sexp, env)

@@ -479,6 +479,19 @@ class ParableCoreTest(unittest.TestCase):
         result = eval_str(exp)
         self.assertEqual(result, -1)
 
+    def test_ineg(self):
+        exp = '(ineg 1)'
+        result = eval_str(exp)
+        self.assertEqual(result, -1)
+
+        exp = '(ineg -1)'
+        result = eval_str(exp)
+        self.assertEqual(result, 1)
+
+        exp = '(ineg 0)'
+        result = eval_str(exp)
+        self.assertEqual(result, 0)
+
     def test_fn(self):
         exp = '(fn)'
         result = eval_str(exp)
@@ -893,6 +906,32 @@ class ErrorTest(unittest.TestCase):
         self.assertEqual(result, create_error(':type-error'))
 
         exp = "(iadd 1 'a)"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+    def test_good_ineg(self):
+        exp = '(ineg (error :foo))'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':foo'))
+
+    def test_bad_ineg(self):
+        exp = '(ineg)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(ineg 1 2)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(ineg "foo")'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = '(ineg nil)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = "(ineg 'x)"
         result = eval_str(exp)
         self.assertEqual(result, create_error(':type-error'))
 
