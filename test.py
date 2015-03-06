@@ -466,6 +466,19 @@ class ParableCoreTest(unittest.TestCase):
         result = eval_str(exp)
         self.assertEqual(result, True)
 
+    def test_iadd(self):
+        exp = '(iadd 1 2)'
+        result = eval_str(exp)
+        self.assertEqual(result, 3)
+
+        exp = '(iadd 10 0)'
+        result = eval_str(exp)
+        self.assertEqual(result, 10)
+
+        exp = '(iadd 1 -2)'
+        result = eval_str(exp)
+        self.assertEqual(result, -1)
+
     def test_fn(self):
         exp = '(fn)'
         result = eval_str(exp)
@@ -832,6 +845,56 @@ class ErrorTest(unittest.TestCase):
         exp = '(eq)'
         result = eval_str(exp)
         self.assertEqual(result, create_error(':arg-error'))
+
+    def test_good_iadd(self):
+        exp = '(iadd (error :foo) 2)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':foo'))
+
+        exp = '(iadd 1 (error :foo))'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':foo'))
+
+        exp = '(iadd (error :foo) (error :bar))'
+        result = eval_str(exp)
+        self.assertIn(result, [create_error(':foo'), create_error(':bar')])
+
+    def test_bad_iadd(self):
+        exp = '(iadd)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(iadd 1)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(iadd 1 2 3)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(iadd nil 2)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = '(iadd 1 nil)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = '(iadd 1 "foo")'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = '(iadd "foo" 1)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = "(iadd 'a 1)"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = "(iadd 1 'a)"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
 
     def test_good_if(self):
         exp = '(if (error :foo) 100 200)'

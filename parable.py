@@ -478,6 +478,26 @@ def eval_prep(sexp, env):
                             ':form', sexp)
     return [first] + rest
 
+def eval_iadd(sexp, env):
+    assert sexp[0].name == 'iadd'
+    if len(sexp) != 3:
+        return create_error(':arg-error',
+                            ':msg', '`iadd` form accepts exactly 2 arguments; {} given.'.format(len(sexp) - 1),
+                            ':form', sexp)
+
+    first = eval(sexp[1], env)
+    second = eval(sexp[2], env)
+
+    if isinstance(first, Error):
+        return first
+    if isinstance(second, Error):
+        return second
+
+    if not isinstance(first, Integer) or not isinstance(second, Integer):
+        return create_error(':type-error')
+
+    return first + second
+
 def eval_eq(sexp, env):
     assert sexp[0].name == 'eq'
     if len(sexp) != 3:
@@ -579,7 +599,8 @@ def eval_sexp(sexp, env):
            Symbol('error'): eval_error,
            Symbol('error-type'): eval_error_type,
            Symbol('error-attrs'): eval_error_attrs,
-           Symbol('apply'): eval_apply}
+           Symbol('apply'): eval_apply,
+           Symbol('iadd'): eval_iadd}
 
     if type(first) == Symbol and first in map:
         return map[first](sexp, env)
