@@ -105,9 +105,9 @@
 (= (last '(:foo))
    :foo)
 (= (last nil)
-   :#ERROR#:)
+   (error :value-error))
 (= (last 1)
-   :#ERROR#:)
+   (error :type-error))
 
 ;; butlast
 (= (butlast '(1 2 3))

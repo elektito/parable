@@ -80,8 +80,14 @@
   (rest (first lst)))
 
 (defun last (lst)
-  (cond ((atom lst) :#ERROR#:)
-        ((null lst) :#ERROR#:)
+  (cond ((atom lst)
+         (error :type-error
+                :msg "The argument to last must be a list."
+                :form lst))
+        ((null lst)
+         (error :value-error
+                :msg "The argument to last cannot be an empty list."
+                :form lst))
         ((null (rest lst)) (first lst))
         (#t (last (rest lst)))))
 
