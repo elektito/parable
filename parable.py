@@ -464,7 +464,7 @@ def eval_prep(sexp, env):
     assert sexp[0].name == 'prep'
     if len(sexp) != 3:
         return create_error(':arg-error',
-                            ':msg', '`prep` form accepts exactly 2 argument; {} given.'.format(len(sexp) - 1),
+                            ':msg', '`prep` form accepts exactly 2 arguments; {} given.'.format(len(sexp) - 1),
                             ':form', sexp)
     first = eval(sexp[1], env)
     rest = eval(sexp[2], env)
