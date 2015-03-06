@@ -153,16 +153,16 @@ class Macro(object):
             return acc
 
         if not isinstance(params, List):
-            raise InvalidParameterList(
-                'Parameter list must be a List not a {}.', type(params).__name__)
+            raise ParamError(
+                'Parameter list must be a List not a {}.'.format(type(params).__name__), params)
 
         check_rest_parameters(params)
 
         oparams = params
         params = flatten(params)
         if not all(isinstance(i, Symbol) for i in params):
-            raise InvalidParameterList(
-                'Parameters must be symbols.')
+            raise ParamError(
+                'Parameters must be symbols.', params)
         params = [i for i in params if i.name != '&']
 
         if len(params) != len(set(params)):
@@ -351,13 +351,13 @@ def eval_error(sexp, env):
 def eval_error_type(sexp, env):
     assert sexp[0].name == 'error-type'
     if len(sexp) != 2:
-        return create_error(':error-error',
+        return create_error(':arg-error',
                             ':msg', 'error-type expects exactly one argument; {} given.'.format(len(sexp) - 1),
                             ':form', sexp)
 
     error = eval(sexp[1], env)
     if type(error) != Error:
-        return create_error(':error-error',
+        return create_error(':type-error',
                             ':msg', 'error-type argument must be an Error; {} given.'.format(str(type(error))),
                             ':form', sexp)
 
@@ -366,13 +366,13 @@ def eval_error_type(sexp, env):
 def eval_error_attrs(sexp, env):
     assert sexp[0].name == 'error-attrs'
     if len(sexp) != 2:
-        return create_error(':error-error',
+        return create_error(':arg-error',
                             ':msg', 'error-attrs expects exactly one argument; {} given.'.format(len(sexp) - 1),
                             ':form', sexp)
 
     error = eval(sexp[1], env)
     if type(error) != Error:
-        return create_error(':error-error',
+        return create_error(':type-error',
                             ':msg', 'error-attrs argument must be an Error; {} given.'.format(str(type(error))),
                             ':form', sexp)
 
@@ -729,12 +729,7 @@ def eval_sexp(sexp, env):
         return first.call(args)
     elif isinstance(first, Macro):
         # now expand the macro.
-        try:
-            expanded = first.expand(args)
-        except ArgError:
-            return create_error(':arg-error',
-                                ':msg', 'Argument list does not match parameter list.',
-                                ':form', args)
+        expanded = first.expand(args)
 
         # evaluate the result of expansion.
         return eval(expanded, env)

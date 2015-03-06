@@ -353,10 +353,34 @@ class ParableCoreTest(unittest.TestCase):
         result = eval_str(exp)
         self.assertEqual(result, Symbol(':foo'))
 
-    def test_error_type(self):
+        exp = '(error-type 1)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = '(error-type)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(error-attrs (error :foo) (error :bar))'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+    def test_error_attrs(self):
         exp = '(error-attrs (error :foo :a 10 :b 20))'
         result = eval_str(exp)
         self.assertEqual(result, List([Symbol(':a'), Integer(10), Symbol(':b'), Integer(20)]))
+
+        exp = '(error-attrs 1)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = '(error-attrs)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(error-attrs (error :foo) (error :bar))'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
 
     def test_if(self):
         exp = "(if #t 'a 'b)"
@@ -413,6 +437,10 @@ class ParableCoreTest(unittest.TestCase):
         exp = "(first '(x y z))"
         result = eval_str(exp)
         self.assertEqual(result, Symbol('x'))
+
+        exp = "(first nil)"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':value-error'))
 
     def test_rest(self):
         exp = "(rest '(x y z))"
@@ -560,6 +588,14 @@ class ParableCoreTest(unittest.TestCase):
         result = eval_str(exp)
         self.assertEqual(result, create_error(':form-error'))
 
+        exp = '(fn (x 1 y) x)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':param-error'))
+
+        exp = '(fn 1 1)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':param-error'))
+
     def test_mac(self):
         exp = '(mac)'
         result = eval_str(exp)
@@ -568,6 +604,14 @@ class ParableCoreTest(unittest.TestCase):
         exp = '(mac ())'
         result = eval_str(exp)
         self.assertEqual(result, create_error(':form-error'))
+
+        exp = '(mac 1 1)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':param-error'))
+
+        exp = '(mac (x 1) x)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':param-error'))
 
     def test_apply(self):
         exp = "(apply (fn (x y) (prep y (prep x '()))) '(10 20))"
@@ -727,6 +771,10 @@ class ParableCoreTest(unittest.TestCase):
         result = eval_str(exp)
         self.assertEqual(result, Symbol('a'))
 
+        exp = '((mac (x (y)) x) 1 2)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
     def test_too_many_arguments_to_macro(self):
         exp = "((mac (x) x) 1 2)"
         result = eval_str(exp)
@@ -798,6 +846,11 @@ class ParableUtilsTest(unittest.TestCase):
         result, expanded = parable.macro_expand(exp, {})
         self.assertFalse(expanded)
         self.assertEqual(result, [])
+
+        exp = '((fn (x) x) 1)'
+        exp = read_str(exp)
+        result, expanded = parable.macro_expand_1(exp, {})
+        self.assertFalse(expanded)
 
         exp = "(car x)"
         exp = read_str(exp)
