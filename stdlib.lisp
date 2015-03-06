@@ -269,6 +269,12 @@
          (iadd (first values)
                (ineg (apply + (rest values)))))))
 
+(defun * (& values)
+  (cond ((null values)
+         1)
+        (#t
+         (imul (first values) (apply * (rest values))))))
+
 (defun ++ (n)
   (iadd n 1))
 
