@@ -487,11 +487,6 @@ def eval_eq(sexp, env):
     first = eval(sexp[1], env)
     second = eval(sexp[2], env)
 
-    if isinstance(first, Error):
-        return first
-    elif isinstance(second, Error):
-        return second
-
     if type(first) != List and type(second) != List:
         return Bool(True) if first == second else Bool(False)
     elif first == second == []:

@@ -810,7 +810,15 @@ class ErrorTest(unittest.TestCase):
     def test_good_eq(self):
         exp = '(eq (error :foo) :bar)'
         result = eval_str(exp)
-        self.assertEqual(result, create_error(':foo'))
+        self.assertEqual(result, Bool(False))
+
+        exp = '(eq (error :foo) (error :foo))'
+        result = eval_str(exp)
+        self.assertEqual(result, Bool(True))
+
+        exp = '(eq (error :foo) (error :bar))'
+        result = eval_str(exp)
+        self.assertEqual(result, Bool(False))
 
     def test_bad_eq(self):
         exp = '(eq (error :foo) :bar :buz)'
