@@ -336,11 +336,11 @@ class ParableCoreTest(unittest.TestCase):
 
         exp = '(error "foo")'
         result = eval_str(exp)
-        self.assertEqual(result, create_error(':error-error'))
+        self.assertEqual(result, create_error(':type-error'))
 
         exp = '(error)'
         result = eval_str(exp)
-        self.assertEqual(result, create_error(':error-error'))
+        self.assertEqual(result, create_error(':arg-error'))
 
     def test_error_arg_evaluation(self):
         exp = "(error (first '(:foo :bar)) :msg (first '(\"foo\" \"bar\")))"

@@ -328,13 +328,13 @@ def macro_expand(exp, env):
 def eval_error(sexp, env):
     assert sexp[0].name == 'error'
     if len(sexp) < 2:
-        return create_error(':error-error',
+        return create_error(':arg-error',
                             ':msg', 'error expects at least one argument; {} given.'.format(len(sexp) - 1),
                             ':form', sexp)
 
     error_type = eval(sexp[1], env)
     if type(error_type) != Symbol:
-        return create_error(':error-error',
+        return create_error(':type-error',
                             ':msg', 'Invalid error type.',
                             ':form', sexp[1])
     attrs = List(eval(i, env) for i in sexp[2:])
