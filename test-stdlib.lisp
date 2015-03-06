@@ -325,3 +325,10 @@
 (= (* 2 3 -4) -24)
 (= (* 2 "foo" 3)
    (error :type-error))
+
+;; /
+(= (/) (error :arg-error))
+(= (/ 1) (error :arg-error))
+(= (/ 4 2) 2)
+(= (/ 100 5 2) 10)
+(= (/ 2 0) (error :value-error))

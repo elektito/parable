@@ -275,6 +275,14 @@
         (#t
          (imul (first values) (apply * (rest values))))))
 
+(defun / (& values)
+  (cond ((null values)
+         (error :arg-error :msg "Too few arguments to /."))
+        ((null (rest values))
+         (error :arg-error :msg "Too few arguments to /."))
+        (#t
+         (reduce idiv values))))
+
 (defun ++ (n)
   (iadd n 1))
 
