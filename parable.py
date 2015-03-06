@@ -494,9 +494,11 @@ def eval_iadd(sexp, env):
         return second
 
     if not isinstance(first, Integer) or not isinstance(second, Integer):
-        return create_error(':type-error')
+        return create_error(':type-error',
+                            ':msg', '`iadd` only accepts integers.',
+                            ':form', sexp)
 
-    return first + second
+    return Integer(first + second)
 
 def eval_imul(sexp, env):
     assert sexp[0].name == 'imul'
@@ -514,9 +516,11 @@ def eval_imul(sexp, env):
         return second
 
     if not isinstance(first, Integer) or not isinstance(second, Integer):
-        return create_error(':type-error')
+        return create_error(':type-error',
+                            ':msg', '`imul` only accepts integers.',
+                            ':form', sexp)
 
-    return first * second
+    return Integer(first * second)
 
 def eval_idiv(sexp, env):
     assert sexp[0].name == 'idiv'
@@ -534,14 +538,16 @@ def eval_idiv(sexp, env):
         return second
 
     if not isinstance(first, Integer) or not isinstance(second, Integer):
-        return create_error(':type-error')
+        return create_error(':type-error',
+                            ':msg', '`idiv` only accepts integers.',
+                            ':form', sexp)
 
     if second == 0:
         return create_error(':value-error',
                             ':msg', 'Division by zero.',
                             ':form', sexp)
 
-    return first / second
+    return Integer(first / second)
 
 def eval_imod(sexp, env):
     assert sexp[0].name == 'imod'
@@ -559,14 +565,16 @@ def eval_imod(sexp, env):
         return second
 
     if not isinstance(first, Integer) or not isinstance(second, Integer):
-        return create_error(':type-error')
+        return create_error(':type-error',
+                            ':msg', '`imod` only accepts integers.',
+                            ':form', sexp)
 
     if second == 0:
         return create_error(':value-error',
                             ':msg', 'Division by zero.',
                             ':form', sexp)
 
-    return first % second
+    return Integer(first % second)
 
 def eval_ineg(sexp, env):
     assert sexp[0].name == 'ineg'
@@ -581,9 +589,11 @@ def eval_ineg(sexp, env):
         return first
 
     if not isinstance(first, Integer):
-        return create_error(':type-error')
+        return create_error(':type-error',
+                            ':msg', '`ineg` only accepts integers.',
+                            ':form', sexp)
 
-    return -first
+    return Integer(-first)
 
 def eval_ilt(sexp, env):
     assert sexp[0].name == 'ilt'
