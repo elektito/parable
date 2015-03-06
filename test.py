@@ -479,6 +479,65 @@ class ParableCoreTest(unittest.TestCase):
         result = eval_str(exp)
         self.assertEqual(result, -1)
 
+    def test_imul(self):
+        exp = '(imul 1 2)'
+        result = eval_str(exp)
+        self.assertEqual(result, 2)
+
+        exp = '(imul 10 0)'
+        result = eval_str(exp)
+        self.assertEqual(result, 0)
+
+        exp = '(imul 1 -2)'
+        result = eval_str(exp)
+        self.assertEqual(result, -2)
+
+        exp = '(imul 3 4)'
+        result = eval_str(exp)
+        self.assertEqual(result, 12)
+
+    def test_idiv(self):
+        exp = '(idiv 1 2)'
+        result = eval_str(exp)
+        self.assertEqual(result, 0)
+
+        exp = '(idiv 10 5)'
+        result = eval_str(exp)
+        self.assertEqual(result, 2)
+
+        exp = '(idiv -4 2)'
+        result = eval_str(exp)
+        self.assertEqual(result, -2)
+
+        exp = '(idiv 4 3)'
+        result = eval_str(exp)
+        self.assertEqual(result, 1)
+
+        exp = '(idiv 4 0)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':value-error'))
+
+    def test_imod(self):
+        exp = '(imod 1 2)'
+        result = eval_str(exp)
+        self.assertEqual(result, 1)
+
+        exp = '(imod 10 4)'
+        result = eval_str(exp)
+        self.assertEqual(result, 2)
+
+        exp = '(imod 1 -2)'
+        result = eval_str(exp)
+        self.assertEqual(result, -1)
+
+        exp = '(imod 4 3)'
+        result = eval_str(exp)
+        self.assertEqual(result, 1)
+
+        exp = '(imod 4 0)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':value-error'))
+
     def test_ineg(self):
         exp = '(ineg 1)'
         result = eval_str(exp)
@@ -906,6 +965,156 @@ class ErrorTest(unittest.TestCase):
         self.assertEqual(result, create_error(':type-error'))
 
         exp = "(iadd 1 'a)"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+    def test_good_imul(self):
+        exp = '(imul (error :foo) 2)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':foo'))
+
+        exp = '(imul 1 (error :foo))'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':foo'))
+
+        exp = '(imul (error :foo) (error :bar))'
+        result = eval_str(exp)
+        self.assertIn(result, [create_error(':foo'), create_error(':bar')])
+
+    def test_bad_imul(self):
+        exp = '(imul)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(imul 1)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(imul 1 2 3)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(imul nil 2)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = '(imul 1 nil)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = '(imul 1 "foo")'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = '(imul "foo" 1)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = "(imul 'a 1)"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = "(imul 1 'a)"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+    def test_good_idiv(self):
+        exp = '(idiv (error :foo) 2)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':foo'))
+
+        exp = '(idiv 1 (error :foo))'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':foo'))
+
+        exp = '(idiv (error :foo) (error :bar))'
+        result = eval_str(exp)
+        self.assertIn(result, [create_error(':foo'), create_error(':bar')])
+
+    def test_bad_idiv(self):
+        exp = '(idiv)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(idiv 1)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(idiv 1 2 3)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(idiv nil 2)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = '(idiv 1 nil)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = '(idiv 1 "foo")'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = '(idiv "foo" 1)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = "(idiv 'a 1)"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = "(idiv 1 'a)"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+    def test_good_imod(self):
+        exp = '(imod (error :foo) 2)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':foo'))
+
+        exp = '(imod 1 (error :foo))'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':foo'))
+
+        exp = '(imod (error :foo) (error :bar))'
+        result = eval_str(exp)
+        self.assertIn(result, [create_error(':foo'), create_error(':bar')])
+
+    def test_bad_imod(self):
+        exp = '(imod)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(imod 1)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(imod 1 2 3)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(imod nil 2)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = '(imod 1 nil)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = '(imod 1 "foo")'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = '(imod "foo" 1)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = "(imod 'a 1)"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = "(imod 1 'a)"
         result = eval_str(exp)
         self.assertEqual(result, create_error(':type-error'))
 

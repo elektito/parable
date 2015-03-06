@@ -498,6 +498,76 @@ def eval_iadd(sexp, env):
 
     return first + second
 
+def eval_imul(sexp, env):
+    assert sexp[0].name == 'imul'
+    if len(sexp) != 3:
+        return create_error(':arg-error',
+                            ':msg', '`imul` form accepts exactly 2 arguments; {} given.'.format(len(sexp) - 1),
+                            ':form', sexp)
+
+    first = eval(sexp[1], env)
+    second = eval(sexp[2], env)
+
+    if isinstance(first, Error):
+        return first
+    if isinstance(second, Error):
+        return second
+
+    if not isinstance(first, Integer) or not isinstance(second, Integer):
+        return create_error(':type-error')
+
+    return first * second
+
+def eval_idiv(sexp, env):
+    assert sexp[0].name == 'idiv'
+    if len(sexp) != 3:
+        return create_error(':arg-error',
+                            ':msg', '`idiv` form accepts exactly 2 arguments; {} given.'.format(len(sexp) - 1),
+                            ':form', sexp)
+
+    first = eval(sexp[1], env)
+    second = eval(sexp[2], env)
+
+    if isinstance(first, Error):
+        return first
+    if isinstance(second, Error):
+        return second
+
+    if not isinstance(first, Integer) or not isinstance(second, Integer):
+        return create_error(':type-error')
+
+    if second == 0:
+        return create_error(':value-error',
+                            ':msg', 'Division by zero.',
+                            ':form', sexp)
+
+    return first / second
+
+def eval_imod(sexp, env):
+    assert sexp[0].name == 'imod'
+    if len(sexp) != 3:
+        return create_error(':arg-error',
+                            ':msg', '`imod` form accepts exactly 2 arguments; {} given.'.format(len(sexp) - 1),
+                            ':form', sexp)
+
+    first = eval(sexp[1], env)
+    second = eval(sexp[2], env)
+
+    if isinstance(first, Error):
+        return first
+    if isinstance(second, Error):
+        return second
+
+    if not isinstance(first, Integer) or not isinstance(second, Integer):
+        return create_error(':type-error')
+
+    if second == 0:
+        return create_error(':value-error',
+                            ':msg', 'Division by zero.',
+                            ':form', sexp)
+
+    return first % second
+
 def eval_ineg(sexp, env):
     assert sexp[0].name == 'ineg'
     if len(sexp) != 2:
@@ -618,6 +688,9 @@ def eval_sexp(sexp, env):
            Symbol('error-attrs'): eval_error_attrs,
            Symbol('apply'): eval_apply,
            Symbol('iadd'): eval_iadd,
+           Symbol('imul'): eval_imul,
+           Symbol('idiv'): eval_idiv,
+           Symbol('imod'): eval_imod,
            Symbol('ineg'): eval_ineg}
 
     if type(first) == Symbol and first in map:
