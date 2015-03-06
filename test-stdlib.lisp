@@ -278,3 +278,13 @@
 (not (string? (mac (x) x)))
 (not (string? 'foo))
 (not (string? :foo))
+
+;; reduce
+(= (reduce iadd '(1 2 3 4 5))
+   15)
+(= (reduce iadd 1)
+   (error :type-error))
+(= (reduce iadd nil)
+   (error :value-error))
+(= (reduce iadd '(1))
+   1)

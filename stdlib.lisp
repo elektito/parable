@@ -239,3 +239,17 @@
 
 (defun string? (v)
   (eq (typeof v) 'str))
+
+(defun reduce (f lst)
+  (cond ((not (eq (typeof f) 'function))
+         (error :type-error))
+        ((atom lst)
+         (error :type-error))
+        ((null lst)
+         (error :value-error))
+        ((null (rest lst))
+         (first lst))
+        ((null (rrest lst))
+         (f (first lst) (second lst)))
+        (#t
+         (f (first lst) (reduce f (rest lst))))))
