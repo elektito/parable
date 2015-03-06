@@ -594,6 +594,31 @@ class ParableCoreTest(unittest.TestCase):
         result = eval_str(exp)
         self.assertEqual(result, 0)
 
+    def test_ilt(self):
+        exp = '(ilt 1 2)'
+        result = eval_str(exp)
+        self.assertEqual(result, Bool(True))
+
+        exp = '(ilt 2 1)'
+        result = eval_str(exp)
+        self.assertEqual(result, Bool(False))
+
+        exp = '(ilt 1 1)'
+        result = eval_str(exp)
+        self.assertEqual(result, Bool(False))
+
+        exp = '(ilt -2 1)'
+        result = eval_str(exp)
+        self.assertEqual(result, Bool(True))
+
+        exp = '(ilt -1 0)'
+        result = eval_str(exp)
+        self.assertEqual(result, Bool(True))
+
+        exp = '(ilt 0 -1)'
+        result = eval_str(exp)
+        self.assertEqual(result, Bool(False))
+
     def test_fn(self):
         exp = '(fn)'
         result = eval_str(exp)
@@ -1187,6 +1212,56 @@ class ErrorTest(unittest.TestCase):
         self.assertEqual(result, create_error(':type-error'))
 
         exp = "(imod 1 'a)"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+    def test_good_ilt(self):
+        exp = '(ilt (error :foo) 2)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':foo'))
+
+        exp = '(ilt 1 (error :foo))'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':foo'))
+
+        exp = '(ilt (error :foo) (error :bar))'
+        result = eval_str(exp)
+        self.assertIn(result, [create_error(':foo'), create_error(':bar')])
+
+    def test_bad_ilt(self):
+        exp = '(ilt)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(ilt 1)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(ilt 1 2 3)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(ilt nil 2)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = '(ilt 1 nil)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = '(ilt 1 "foo")'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = '(ilt "foo" 1)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = "(ilt 'a 1)"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = "(ilt 1 'a)"
         result = eval_str(exp)
         self.assertEqual(result, create_error(':type-error'))
 

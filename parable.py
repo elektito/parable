@@ -585,6 +585,28 @@ def eval_ineg(sexp, env):
 
     return -first
 
+def eval_ilt(sexp, env):
+    assert sexp[0].name == 'ilt'
+    if len(sexp) != 3:
+        return create_error(':arg-error',
+                            ':msg', '`ilt` form accepts exactly 2 arguments; {} given.'.format(len(sexp) - 1),
+                            ':form', sexp)
+
+    first = eval(sexp[1], env)
+    second = eval(sexp[2], env)
+
+    if isinstance(first, Error):
+        return first
+    if isinstance(second, Error):
+        return second
+
+    if not isinstance(first, Integer):
+        return create_error(':type-error')
+    if not isinstance(second, Integer):
+        return create_error(':type-error')
+
+    return Bool(first < second)
+
 def eval_eq(sexp, env):
     assert sexp[0].name == 'eq'
     if len(sexp) != 3:
@@ -691,6 +713,7 @@ def eval_sexp(sexp, env):
            Symbol('imul'): eval_imul,
            Symbol('idiv'): eval_idiv,
            Symbol('imod'): eval_imod,
+           Symbol('ilt'): eval_ilt,
            Symbol('ineg'): eval_ineg}
 
     if type(first) == Symbol and first in map:
