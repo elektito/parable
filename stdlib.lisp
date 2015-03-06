@@ -259,3 +259,12 @@
          0)
         (#t
          (iadd (first values) (apply + (rest values))))))
+
+(defun - (& values)
+  (cond ((null values)
+         0)
+        ((null (rest values))
+         (ineg (first values)))
+        (#t
+         (iadd (first values)
+               (ineg (apply + (rest values)))))))
