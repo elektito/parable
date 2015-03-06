@@ -252,7 +252,7 @@
         ((null (rrest lst))
          (f (first lst) (second lst)))
         (#t
-         (f (first lst) (reduce f (rest lst))))))
+         (f (reduce f (butlast lst)) (last lst)))))
 
 (defun + (& values)
   (cond ((null values)

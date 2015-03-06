@@ -288,6 +288,8 @@
    (error :value-error))
 (= (reduce iadd '(1))
    1)
+(= (reduce idiv '(100 5 2))
+   10)
 
 ;; +
 (= (+) 0)
