@@ -253,3 +253,9 @@
          (f (first lst) (second lst)))
         (#t
          (f (first lst) (reduce f (rest lst))))))
+
+(defun + (& values)
+  (cond ((null values)
+         0)
+        (#t
+         (iadd (first values) (apply + (rest values))))))

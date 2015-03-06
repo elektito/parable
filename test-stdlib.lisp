@@ -288,3 +288,11 @@
    (error :value-error))
 (= (reduce iadd '(1))
    1)
+
+;; +
+(= (+) 0)
+(= (+ 1) 1)
+(= (+ 2 2) 4)
+(= (+ 2 3 4 -1) 8)
+(= (+ 2 "foo" 3)
+   (error :type-error))
