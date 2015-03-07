@@ -288,3 +288,8 @@
 
 (defun -- (n)
   (iadd n -1))
+
+(defun len (lst)
+  (if (null lst)
+      0
+      (++ (len (rest lst)))))

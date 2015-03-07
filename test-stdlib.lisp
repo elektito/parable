@@ -332,3 +332,9 @@
 (= (/ 4 2) 2)
 (= (/ 100 5 2) 10)
 (= (/ 2 0) (error :value-error))
+
+;; len
+(= (len nil) 0)
+(= (len '(a)) 1)
+(= (len '(a 2 "foo")) 3)
+(= (len '(a (b) c nil)) 4)
