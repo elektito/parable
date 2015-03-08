@@ -289,6 +289,20 @@
 (defun -- (n)
   (iadd n -1))
 
+(defun < (m n)
+  (ilt m n))
+
+(defun > (m n)
+  (not (ilt m n)))
+
+(defun <= (m n)
+  (or (< m n)
+      (= m n)))
+
+(defun >= (m n)
+  (or (> m n)
+      (= m n)))
+
 (defun len (lst)
   (if (null lst)
       0
