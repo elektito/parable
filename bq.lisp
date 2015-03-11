@@ -26,35 +26,44 @@
         ((eq (first form) 'backquote) #t)
         (#t #f)))
 
-(defun bq-process-list-item (form)
+(defun bq-process-list-item (form level)
   (cond ((atom form)
          (list 'quote (list form)))
         ((bq-is-unquote form)
-         (list 'list (second form)))
+         (if (= level 1)
+             (list 'list (second form))
+             (list 'list (bq-process-list form (-- level)))))
         ((bq-is-unquote-splicing form)
          (second form))
         ((bq-is-backquote form)
-         (list 'quote (list '#:ERROR:NESTED-BACKQUOTES:#)))
+         (list 'list
+               (bq-process-list form (++ level))))
         (#t
          (list 'list
-               (bq-process-list form)))))
+               (bq-process-list form level)))))
 
-(defun bq-process-list (form)
+(defun bq-process-list (form level)
   (prep 'append
-        (mapf bq-process-list-item form)))
+        (mapf (fn (form)
+                (bq-process-list-item form level))
+              form)))
 
-(defun bq-process (form)
+(defun bq-process (form level)
   (cond ((atom form)
-         (list 'quote form))
+         (if (= level 1)
+             (list 'quote form)
+             form))
         ((bq-is-unquote form)
-         (second form))
+         (if (= level 1)
+             (second form)
+             (bq-process-list form (-- level))))
         ((bq-is-unquote-splicing form)
          (list 'quote '#:ERROR:#))
         ((bq-is-backquote form)
-         (list 'quote '#:ERROR:NESTED-BACKQUOTES:#))
+         (bq-process-list form (++ level)))
         (#t
-         (bq-process-list form))))
+         (bq-process-list form level))))
 
 (defmac backquote (form)
   (bq-simplify
-   (bq-process form)))
+   (bq-process form 1)))
