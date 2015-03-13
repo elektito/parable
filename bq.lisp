@@ -58,7 +58,8 @@
              (second form)
              (bq-process-list form (-- level))))
         ((bq-is-unquote-splicing form)
-         (list 'quote '#:ERROR:#))
+         (error :backquote-error
+                :msg "unquote-splicing immediately inside backquote."))
         ((bq-is-backquote form)
          (bq-process-list form (++ level)))
         (#t
