@@ -4,8 +4,8 @@ python:
 install:
   - pip install coveralls
 script:
-  - coverage run load.py -l stdlib.lisp bq.lisp -t test-composition.lisp
   - coverage run test.py
+  - coverage run -a load.py -l stdlib.lisp bq.lisp -t test-composition.lisp
   - coverage report -m
   - python load.py -l stdlib.lisp bq.lisp -t test-stdlib.lisp test-bq.lisp
 after_success:
