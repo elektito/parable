@@ -386,3 +386,4 @@
 (= (len '(a)) 1)
 (= (len '(a 2 "foo")) 3)
 (= (len '(a (b) c nil)) 4)
+(= (len 1) (error :type-error))

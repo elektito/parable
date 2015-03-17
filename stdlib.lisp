@@ -304,6 +304,9 @@
       (= m n)))
 
 (defun len (lst)
-  (if (null lst)
-      0
-      (++ (len (rest lst)))))
+  (cond ((eq (typeof lst) 'list)
+         (if (null lst)
+             0
+             (++ (len (rest lst)))))
+        (#t (error :type-error
+                   :msg "`len` argument can only be a list."))))
