@@ -747,7 +747,7 @@ def eval_sexp(sexp, env):
 
         if first < 0 or first > len(second) - 1:
             return create_error(':index-error',
-                                ':msg', 'Index {} not valid for the given list.',
+                                ':msg', 'Index {} not valid for the given list.'.format(first),
                                 ':form', sexp[0])
 
         return second[first]
