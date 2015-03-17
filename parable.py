@@ -729,9 +729,29 @@ def eval_sexp(sexp, env):
     if type(first) == Symbol and first in map:
         return map[first](sexp, env)
 
-    # it must be a function or macro call then.
+    # it must be a function or macro call, or an integer index.
 
     first = eval(sexp[0], env)
+
+    if isinstance(first, Integer):
+        if len(sexp) != 2:
+            return create_error(':arg-error',
+                                ':msg', 'Index form with more than one argument.',
+                                ':form', sexp)
+
+        second = eval(sexp[1], env)
+        if not isinstance(second, List):
+            return create_error(':type-error',
+                                ':msg', 'Only lists can be indexed.',
+                                ':form', sexp[1])
+
+        if first < 0 or first > len(second) - 1:
+            return create_error(':index-error',
+                                ':msg', 'Index {} not valid for the given list.',
+                                ':form', sexp[0])
+
+        return second[first]
+
     if not isinstance(first, (Function, Macro)):
         return create_error(':value-error',
                             ':msg', 'Not a function or a macro: {}'.format(first),

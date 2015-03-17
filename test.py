@@ -843,6 +843,39 @@ class ParableCoreTest(unittest.TestCase):
         result = eval_str(exp, {Symbol('x'): 20, Symbol('foo'): func})
         self.assertEqual(result, 10)
 
+    def test_integer_index(self):
+        exp = "(0 '(a b c))"
+        result = eval_str(exp)
+        self.assertEqual(result, Symbol('a'))
+
+        exp = "(1 '(a b c))"
+        result = eval_str(exp)
+        self.assertEqual(result, Symbol('b'))
+
+        exp = "(2 '(a b c))"
+        result = eval_str(exp)
+        self.assertEqual(result, Symbol('c'))
+
+        exp = "(3 '(a b c))"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':index-error'))
+
+        exp = "(-1 '(a b c))"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':index-error'))
+
+        exp = "(0 nil)"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':index-error'))
+
+        exp = "(0 1)"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = "(0 '(a b c) '(foo bar))"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
 class ParableUtilsTest(unittest.TestCase):
     def test_macro_expand_single(self):
         exp = "((mac (a) 'a) 'x))"
