@@ -656,6 +656,49 @@ def eval_apply(sexp, env):
                             ':form', args)
     return func.call(args)
 
+def eval_function_composition(exp, env):
+    def compose(names):
+        if len(names) == 1:
+            return names[0]
+        else:
+            # (fn (x) (f0 (fr x)))
+            nexp = List([Symbol('fn'), List([Symbol('x')]), List([env[names[0]] if isinstance(names[0], Symbol) else names[0], List([compose(names[1:]), Symbol('x')])])])
+            lists = [nexp, nexp[0], nexp[1], nexp[2], nexp[1][0], nexp[2][0], nexp[2][1], nexp[2][1][0], nexp[2][1][1]]
+            for i in lists:
+                i.filename = exp.filename
+                i.start_row = exp.start_row
+                i.start_col = exp.start_col
+                i.end_row = exp.end_row
+                i.end_col = exp.end_col
+
+            return eval(nexp, env)
+
+    def str_to_int_or_sym(s):
+        try:
+            int(s)
+        except ValueError:
+            return Symbol(s)
+        else:
+            return Integer(s)
+
+    names = exp.name.split(':')
+    if any(name == '' for name in names):
+        return create_error(':composition-error',
+                            ':msg', 'Invalid function composition: {}'.format(exp.name),
+                            ':form', exp)
+
+    names = List(str_to_int_or_sym(name) for name in names)
+    for i in names:
+        i.filename = exp.filename
+        i.start_row = exp.start_row
+        i.start_col = exp.start_col
+        i.end_row = exp.end_row
+        i.end_col = exp.end_col
+
+    names = [eval(i, env) if isinstance(i, Symbol) else i for i in names]
+
+    return compose(names)
+
 def eval(exp, env):
     if type(exp) == List:
         return eval_sexp(exp, env)
@@ -667,10 +710,17 @@ def eval(exp, env):
         return exp
     elif type(exp) == Error:
         return exp
+    elif isinstance(exp, Function):
+        return exp
+    elif isinstance(exp, Macro):
+        return exp
     elif exp == Symbol('nil'):
         return List()
     elif type(exp) == Symbol and exp.name.startswith(':'):
         return exp
+
+    if exp.name.find(':') > 0:
+        return eval_function_composition(exp, env)
 
     if exp not in env:
         return create_error(':variable-error',
@@ -751,6 +801,9 @@ def eval_sexp(sexp, env):
                                 ':form', sexp[0])
 
         return second[first]
+
+    if isinstance(first, Error):
+        return first
 
     if not isinstance(first, (Function, Macro)):
         return create_error(':value-error',
