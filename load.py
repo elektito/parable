@@ -71,7 +71,7 @@ def display_form(form, context):
                   first_part=first_part,
                   second_part=second_part,
                   third_part=third_part)
-        print '{LINE_NO_COLOR}{lineno}: ' \
+        print '{LINE_NO_COLOR}{lineno}:\t' \
             '{CODE_COLOR}{first_part}{HIGHLIGHT_COLOR}' \
             '{second_part}{CODE_COLOR}{third_part}{END_COLOR}'.format(**dict(d, **d2))
 
