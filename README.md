@@ -7,3 +7,5 @@ Parable is a Lisp interpreter, at the moment being bootstrapped from
 Python. You can take a look at the current
 [development roadmap](https://github.com/elektito/parable/wiki/New-Parable-Roadmap)
 to learn more about Parable.
+
+To get a REPL, just clone the repository and run `./repl.py`.
