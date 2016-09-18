@@ -16,7 +16,11 @@ def main():
                     exit(2)
 
         while True:
-            expr = raw_input('* ')
+            try:
+                expr = raw_input('* ')
+            except (KeyboardInterrupt, EOFError):
+                print
+                break
             try:
                 form = Reader(expr, '<string>').read()
                 result = eval_form(form, env)
