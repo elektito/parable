@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from parable import eval as eval_form, Error, Symbol
 from read import Reader, ReadError, EofReadError
 from load import print_exception, print_error, LoadError, LoadWarning, load

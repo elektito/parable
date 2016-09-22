@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from parable import Symbol, eval as eval_form, macro_expand, List, Error
 from read import Reader, ReadError, EofReadError
 from pprint import pprint
