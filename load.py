@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 from parable import Symbol, eval as eval_form, macro_expand, List, Error
 from read import Reader, ReadError, EofReadError
