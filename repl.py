@@ -23,6 +23,8 @@ def main():
             except (KeyboardInterrupt, EOFError):
                 print
                 break
+            if not expr:
+                continue
             try:
                 form = Reader(expr, '<string>').read()
                 result = eval_form(form, env)
