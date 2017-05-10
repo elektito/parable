@@ -28,6 +28,7 @@ def main():
                 result = eval_form(form, env)
             except ReadError as e:
                 print_exception(e)
+                continue
             if isinstance(result, Error):
                 print_error(result)
             print pprint(result)
