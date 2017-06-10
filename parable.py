@@ -617,6 +617,99 @@ def eval_ilt(sexp, env):
 
     return Bool(first < second)
 
+def eval_scat(sexp, env):
+    assert sexp[0].name == 'scat'
+    if len(sexp) != 3:
+        return create_error(':arg-error',
+                            ':msg', '`scat` form accepts exactly 2 arguments: {} given.'.format(len(sexp) - 1),
+                            ':form', sexp)
+
+    first = eval(sexp[1], env)
+    second = eval(sexp[2], env)
+
+    if isinstance(first, Error):
+        return first
+    if isinstance(second, Error):
+        return second
+
+    if not isinstance(first, String):
+        return create_error(':type-error',
+                            ':msg', 'Arguments to `scat` form must be a string.',
+                            ':form', sexp)
+    if not isinstance(second, String):
+        return create_error(':type-error',
+                            ':msg', 'Arguments to `scat` form must be a string.',
+                            ':form', sexp)
+
+    return String(first + second)
+
+def eval_slen(sexp, env):
+    assert sexp[0].name == 'slen'
+    if len(sexp) != 2:
+        return create_error(':arg-error',
+                            ':msg', '`slen` form accepts exactly 1 argument: {} given.'.format(len(sexp) - 1),
+                            ':form', sexp)
+
+    arg = eval(sexp[1], env)
+
+    if isinstance(arg, Error):
+        return arg
+
+    if not isinstance(arg, String):
+        return create_error(':type-error',
+                            ':msg', 'Argument to `slen` form must be a string.',
+                            ':form', sexp)
+
+    return Integer(len(arg))
+
+def eval_sfirst(sexp, env):
+    assert sexp[0].name == 'sfirst'
+    if len(sexp) != 2:
+        return create_error(':arg-error',
+                            ':msg', '`sfirst` form accepts exactly 1 argument: {} given.'.format(len(sexp) - 1),
+                            ':form', sexp)
+
+    arg = eval(sexp[1], env)
+
+    if isinstance(arg, Error):
+        return arg
+
+    if not isinstance(arg, String):
+        return create_error(':type-error',
+                            ':msg', 'Argument to `sfirst` form must be a string.',
+                            ':form', sexp)
+
+    if len(arg) == 0:
+        return create_error(':value-error',
+                            ':msg', 'Argument to `sfirst` form cannot be an empty string.',
+                            ':form', sexp)
+
+    return String(arg[:1])
+
+def eval_srest(sexp, env):
+    assert sexp[0].name == 'srest'
+    if len(sexp) != 2:
+        return create_error(':arg-error',
+                            ':msg', '`srest` form accepts exactly 1 argument: {} given.'.format(len(sexp) - 1),
+                            ':form', sexp)
+
+    arg = eval(sexp[1], env)
+
+    if isinstance(arg, Error):
+        return arg
+
+    if not isinstance(arg, String):
+        return create_error(':type-error',
+                            ':msg', 'Argument to `srest` form must be a string.',
+                            ':form', sexp)
+
+    if len(arg) == 0:
+        return create_error(':value-error',
+                            ':msg', 'Argument to `srest` form cannot be an empty string.',
+                            ':form', sexp)
+
+    return String(arg[1:])
+
 def eval_eq(sexp, env):
     assert sexp[0].name == 'eq'
     if len(sexp) != 3:
@@ -775,7 +868,11 @@ def eval_sexp(sexp, env):
         Symbol('idiv'): eval_idiv,
         Symbol('imod'): eval_imod,
         Symbol('ilt'): eval_ilt,
-        Symbol('ineg'): eval_ineg
+        Symbol('ineg'): eval_ineg,
+        Symbol('scat'): eval_scat,
+        Symbol('slen'): eval_slen,
+        Symbol('sfirst'): eval_sfirst,
+        Symbol('srest'): eval_srest,
     }
 
     if type(first) == Symbol and first in map:

@@ -619,6 +619,118 @@ class ParableCoreTest(unittest.TestCase):
         result = eval_str(exp)
         self.assertEqual(result, Bool(False))
 
+    def test_scat(self):
+        exp = '(scat "foo" "bar")'
+        result = eval_str(exp)
+        self.assertEqual(result, String("foobar"))
+
+        exp = '(scat (error :foo) "bar")'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':foo'))
+
+        exp = '(scat "foo" (error :bar))'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':bar'))
+
+        exp = '(scat "foo" "bar" "spam")'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(scat "foo")'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(scat)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(scat "foo" 1)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+    def test_slen(self):
+        exp = '(slen "foobar")'
+        result = eval_str(exp)
+        self.assertEqual(result, Integer(6))
+
+        exp = '(slen "")'
+        result = eval_str(exp)
+        self.assertEqual(result, Integer(0))
+
+        exp = '(slen (error :foo))'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':foo'))
+
+        exp = '(slen)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(slen "foo" "bar")'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(slen 1)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+    def test_sfirst(self):
+        exp = '(sfirst "foobar")'
+        result = eval_str(exp)
+        self.assertEqual(result, String("f"))
+
+        exp = '(sfirst "f")'
+        result = eval_str(exp)
+        self.assertEqual(result, String("f"))
+
+        exp = '(sfirst "")'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':value-error'))
+
+        exp = '(sfirst (error :foo))'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':foo'))
+
+        exp = '(sfirst "foo" "bar")'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(sfirst)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(sfirst 1)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+    def test_srest(self):
+        exp = '(srest "foobar")'
+        result = eval_str(exp)
+        self.assertEqual(result, String("oobar"))
+
+        exp = '(srest "f")'
+        result = eval_str(exp)
+        self.assertEqual(result, String(""))
+
+        exp = '(srest "")'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':value-error'))
+
+        exp = '(srest (error :foo))'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':foo'))
+
+        exp = '(srest "foo" "bar")'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(srest)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(srest 1)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
     def test_fn(self):
         exp = '(fn)'
         result = eval_str(exp)
