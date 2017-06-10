@@ -40,6 +40,18 @@
 (defun ineg (n)
   (ineg n m))
 
+(defun scat (s t)
+  (scat s t))
+
+(defun slen (s)
+  (slen s))
+
+(defun sfirst (s)
+  (sfirst s))
+
+(defun srest (s)
+  (srest s))
+
 (defun null (v)
   (if (eq v nil) #t #f))
 
@@ -303,10 +315,16 @@
   (or (> m n)
       (= m n)))
 
-(defun len (lst)
-  (cond ((eq (typeof lst) 'list)
-         (if (null lst)
+(defun len (arg)
+  (cond ((eq (typeof arg) 'list)
+         (if (null arg)
              0
-             (++ (len (rest lst)))))
+             (++ (len (rest arg)))))
+        ((eq (typeof arg) 'str) (slen arg))
         (#t (error :type-error
-                   :msg "`len` argument can only be a list."))))
+                   :msg "`len` argument should be either a list or a string."))))
+
+(defun cat (& values)
+  (if (eq values ())
+      ""
+      (reduce scat values)))
