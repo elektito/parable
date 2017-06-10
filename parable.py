@@ -758,23 +758,25 @@ def eval_sexp(sexp, env):
                                 ':msg', 'Invalid macro parameter list: ' + str(e),
                                 ':form', sexp[1])
 
-    map = {Symbol('if'): eval_if,
-           Symbol('quote'): eval_quote,
-           Symbol('prep'): eval_prep,
-           Symbol('typeof'): eval_typeof,
-           Symbol('first'): eval_first,
-           Symbol('rest'): eval_rest,
-           Symbol('eq'): eval_eq,
-           Symbol('error'): eval_error,
-           Symbol('error-type'): eval_error_type,
-           Symbol('error-attrs'): eval_error_attrs,
-           Symbol('apply'): eval_apply,
-           Symbol('iadd'): eval_iadd,
-           Symbol('imul'): eval_imul,
-           Symbol('idiv'): eval_idiv,
-           Symbol('imod'): eval_imod,
-           Symbol('ilt'): eval_ilt,
-           Symbol('ineg'): eval_ineg}
+    map = {
+        Symbol('if'): eval_if,
+        Symbol('quote'): eval_quote,
+        Symbol('prep'): eval_prep,
+        Symbol('typeof'): eval_typeof,
+        Symbol('first'): eval_first,
+        Symbol('rest'): eval_rest,
+        Symbol('eq'): eval_eq,
+        Symbol('error'): eval_error,
+        Symbol('error-type'): eval_error_type,
+        Symbol('error-attrs'): eval_error_attrs,
+        Symbol('apply'): eval_apply,
+        Symbol('iadd'): eval_iadd,
+        Symbol('imul'): eval_imul,
+        Symbol('idiv'): eval_idiv,
+        Symbol('imod'): eval_imod,
+        Symbol('ilt'): eval_ilt,
+        Symbol('ineg'): eval_ineg
+    }
 
     if type(first) == Symbol and first in map:
         return map[first](sexp, env)
