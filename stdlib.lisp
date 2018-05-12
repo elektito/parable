@@ -52,6 +52,9 @@
 (defun srest (s)
   (srest s))
 
+(defun if (c e1 e2)
+  (if c e1 e2))
+
 (defun null (v)
   (if (eq v nil) #t #f))
 
