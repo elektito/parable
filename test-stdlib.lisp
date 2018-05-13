@@ -395,3 +395,21 @@
 (= (cat "foo") "foo")
 (= (cat "foo" "bar") "foobar")
 (= (cat "foo" "bar" "spam") "foobarspam")
+
+;; max
+
+(= (max '(1 2 3)) 3)
+(= (max '(2 3 1)) 3)
+(= (max '(2 3 1 -4)) 3)
+(= (max '(-2 -3 -1)) -1)
+(= (max '(0)) 0)
+(= (max '()) (error :value-error))
+
+;; min
+
+(= (min '(1 2 3)) 1)
+(= (min '(2 3 1)) 1)
+(= (min '(2 3 1 -4)) -4)
+(= (min '(-2 -3 -1)) -3)
+(= (min '(0)) 0)
+(= (min '()) (error :value-error))

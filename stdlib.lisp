@@ -331,3 +331,25 @@
   (if (eq values ())
       ""
       (reduce scat values)))
+
+(defun max (lst)
+  (cond ((eq lst nil)
+         (error :value-error
+                :msg "Argument cannot be an empty list."))
+        ((eq (rest lst) nil)
+         (first lst))
+        (#t
+         (let ((m1 (first lst))
+               (m2 (max (rest lst))))
+           (if (> m1 m2) m1 m2)))))
+
+(defun min (lst)
+  (cond ((eq lst nil)
+         (error :value-error
+                :msg "Argument cannot be an empty list."))
+        ((eq (rest lst) nil)
+         (first lst))
+        (#t
+         (let ((m1 (first lst))
+               (m2 (min (rest lst))))
+           (if (< m1 m2) m1 m2)))))
