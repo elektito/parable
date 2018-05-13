@@ -16,7 +16,7 @@ class LoadError(RuntimeError):
         self.form = form
 
 def display_form(form, context):
-    if form.filename == '<string>':
+    if form.filename == '<string>' or form.filename == '':
         return
 
     with open(form.filename) as f:
