@@ -40,6 +40,9 @@
 (defun ineg (n)
   (ineg n m))
 
+(defun ilt (n m)
+  (ilt n m))
+
 (defun scat (s t)
   (scat s t))
 
