@@ -49,11 +49,14 @@
 (defun slen (s)
   (slen s))
 
+(defun sslice (s idx len)
+  (sslice s idx len))
+
 (defun sfirst (s)
-  (sfirst s))
+  (0 s))
 
 (defun srest (s)
-  (srest s))
+  (sslice s 1 (-- (slen s))))
 
 (defun if (c e1 e2)
   (if c e1 e2))

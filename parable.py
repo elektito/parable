@@ -662,53 +662,42 @@ def eval_slen(sexp, env):
 
     return Integer(len(arg))
 
-def eval_sfirst(sexp, env):
-    assert sexp[0].name == 'sfirst'
-    if len(sexp) != 2:
+def eval_sslice(sexp, env):
+    assert sexp[0].name == 'sslice'
+    if len(sexp) != 4:
         return create_error(':arg-error',
-                            ':msg', '`sfirst` form accepts exactly 1 argument: {} given.'.format(len(sexp) - 1),
+                            ':msg', '`sslice` form accepts exactly 3 arguments: {} given.'.format(len(sexp) - 1),
                             ':form', sexp)
 
-    arg = eval(sexp[1], env)
+    arg1 = eval(sexp[1], env)
+    arg2 = eval(sexp[2], env)
+    arg3 = eval(sexp[3], env)
 
-    if isinstance(arg, Error):
-        return arg
+    if isinstance(arg1, Error):
+        return arg1
 
-    if not isinstance(arg, String):
+    if isinstance(arg2, Error):
+        return arg2
+
+    if isinstance(arg3, Error):
+        return arg3
+
+    if not isinstance(arg1, String):
         return create_error(':type-error',
-                            ':msg', 'Argument to `sfirst` form must be a string.',
+                            ':msg', 'First argument to `sslice` form must be a string.',
                             ':form', sexp)
 
-    if len(arg) == 0:
-        return create_error(':value-error',
-                            ':msg', 'Argument to `sfirst` form cannot be an empty string.',
-                            ':form', sexp)
-
-    return String(arg[:1])
-
-def eval_srest(sexp, env):
-    assert sexp[0].name == 'srest'
-    if len(sexp) != 2:
-        return create_error(':arg-error',
-                            ':msg', '`srest` form accepts exactly 1 argument: {} given.'.format(len(sexp) - 1),
-                            ':form', sexp)
-
-    arg = eval(sexp[1], env)
-
-    if isinstance(arg, Error):
-        return arg
-
-    if not isinstance(arg, String):
+    if not isinstance(arg2, Integer):
         return create_error(':type-error',
-                            ':msg', 'Argument to `srest` form must be a string.',
+                            ':msg', 'Second argument to `sslice` form must be an integer.',
                             ':form', sexp)
 
-    if len(arg) == 0:
-        return create_error(':value-error',
-                            ':msg', 'Argument to `srest` form cannot be an empty string.',
+    if not isinstance(arg3, Integer):
+        return create_error(':type-error',
+                            ':msg', 'Third argument to `sslice` form must be an integer.',
                             ':form', sexp)
 
-    return String(arg[1:])
+    return String(arg1[arg2:arg2+arg3])
 
 def eval_eq(sexp, env):
     assert sexp[0].name == 'eq'
@@ -871,8 +860,7 @@ def eval_sexp(sexp, env):
         Symbol('ineg'): eval_ineg,
         Symbol('scat'): eval_scat,
         Symbol('slen'): eval_slen,
-        Symbol('sfirst'): eval_sfirst,
-        Symbol('srest'): eval_srest,
+        Symbol('sslice'): eval_sslice,
     }
 
     if type(first) == Symbol and first in map:
@@ -889,17 +877,20 @@ def eval_sexp(sexp, env):
                                 ':form', sexp)
 
         second = eval(sexp[1], env)
-        if not isinstance(second, List):
+        if not isinstance(second, (List, String)):
             return create_error(':type-error',
-                                ':msg', 'Only lists can be indexed.',
+                                ':msg', 'Only lists and strings can be indexed.',
                                 ':form', sexp[1])
 
         if first < 0 or first > len(second) - 1:
             return create_error(':index-error',
-                                ':msg', 'Index {} not valid for the given list.'.format(first),
+                                ':msg', 'Index {} not valid for the given argument.'.format(first),
                                 ':form', sexp[0])
 
-        return second[first]
+        if isinstance(second, List):
+            return second[first]
+        else:
+            return String(second[first])
 
     if isinstance(first, Error):
         return first

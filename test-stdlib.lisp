@@ -413,3 +413,13 @@
 (= (min '(-2 -3 -1)) -3)
 (= (min '(0)) 0)
 (= (min '()) (error :value-error))
+
+;; sfirst
+
+(= (sfirst "foo") "f")
+(= (sfirst "") (error :index-error))
+
+;; srest
+
+(= (srest "foo") "oo")
+(= (srest "") "")

@@ -673,61 +673,68 @@ class ParableCoreTest(unittest.TestCase):
         result = eval_str(exp)
         self.assertEqual(result, create_error(':type-error'))
 
-    def test_sfirst(self):
-        exp = '(sfirst "foobar")'
+    def test_sslice(self):
+        exp = '(sslice "foobar" 0 6)'
         result = eval_str(exp)
-        self.assertEqual(result, String("f"))
+        self.assertEqual(result, String("foobar"))
 
-        exp = '(sfirst "f")'
+        exp = '(sslice "foobar" 2 3)'
         result = eval_str(exp)
-        self.assertEqual(result, String("f"))
+        self.assertEqual(result, String("oba"))
 
-        exp = '(sfirst "")'
-        result = eval_str(exp)
-        self.assertEqual(result, create_error(':value-error'))
-
-        exp = '(sfirst (error :foo))'
-        result = eval_str(exp)
-        self.assertEqual(result, create_error(':foo'))
-
-        exp = '(sfirst "foo" "bar")'
-        result = eval_str(exp)
-        self.assertEqual(result, create_error(':arg-error'))
-
-        exp = '(sfirst)'
-        result = eval_str(exp)
-        self.assertEqual(result, create_error(':arg-error'))
-
-        exp = '(sfirst 1)'
-        result = eval_str(exp)
-        self.assertEqual(result, create_error(':type-error'))
-
-    def test_srest(self):
-        exp = '(srest "foobar")'
-        result = eval_str(exp)
-        self.assertEqual(result, String("oobar"))
-
-        exp = '(srest "f")'
+        exp = '(sslice "foobar" 2 0)'
         result = eval_str(exp)
         self.assertEqual(result, String(""))
 
-        exp = '(srest "")'
+        exp = '(sslice "foobar" 0 30)'
         result = eval_str(exp)
-        self.assertEqual(result, create_error(':value-error'))
+        self.assertEqual(result, String("foobar"))
 
-        exp = '(srest (error :foo))'
+        exp = '(sslice "foobar" 10 20)'
+        result = eval_str(exp)
+        self.assertEqual(result, String(""))
+
+        exp = '(sslice "" 0 0)'
+        result = eval_str(exp)
+        self.assertEqual(result, String(""))
+
+        exp = '(sslice (error :foo) 10 20)'
         result = eval_str(exp)
         self.assertEqual(result, create_error(':foo'))
 
-        exp = '(srest "foo" "bar")'
+        exp = '(sslice "foo" (error :foo) 10)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':foo'))
+
+        exp = '(sslice "foo" 10 (error :foo))'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':foo'))
+
+        exp = '(sslice "foo" (error :bar) (error :foo))'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':bar'))
+
+        exp = '(sslice "foo" 10 20 30)'
         result = eval_str(exp)
         self.assertEqual(result, create_error(':arg-error'))
 
-        exp = '(srest)'
+        exp = '(sslice "foo" 10)'
         result = eval_str(exp)
         self.assertEqual(result, create_error(':arg-error'))
 
-        exp = '(srest 1)'
+        exp = '(sslice "foo")'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(sslice)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+        exp = '(sslice 1 1 1)'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':type-error'))
+
+        exp = '(sslice "foo" "bar" 1)'
         result = eval_str(exp)
         self.assertEqual(result, create_error(':type-error'))
 
@@ -955,7 +962,7 @@ class ParableCoreTest(unittest.TestCase):
         result = eval_str(exp, {Symbol('x'): 20, Symbol('foo'): func})
         self.assertEqual(result, 10)
 
-    def test_integer_index(self):
+    def test_integer_index_on_list(self):
         exp = "(0 '(a b c))"
         result = eval_str(exp)
         self.assertEqual(result, Symbol('a'))
@@ -985,6 +992,31 @@ class ParableCoreTest(unittest.TestCase):
         self.assertEqual(result, create_error(':type-error'))
 
         exp = "(0 '(a b c) '(foo bar))"
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':arg-error'))
+
+    def test_integer_index_on_string(self):
+        exp = '(0 "foobar")'
+        result = eval_str(exp)
+        self.assertEqual(result, String('f'))
+
+        exp = '(3 "foobar")'
+        result = eval_str(exp)
+        self.assertEqual(result, String('b'))
+
+        exp = '(5 "foobar")'
+        result = eval_str(exp)
+        self.assertEqual(result, String('r'))
+
+        exp = '(6 "foobar")'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':index-error'))
+
+        exp = '(-1 "foobar")'
+        result = eval_str(exp)
+        self.assertEqual(result, create_error(':index-error'))
+
+        exp = '(-1 "foobar" "bar")'
         result = eval_str(exp)
         self.assertEqual(result, create_error(':arg-error'))
 
